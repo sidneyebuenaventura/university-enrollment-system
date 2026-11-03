@@ -180,20 +180,6 @@ class ClassGradeSerializer(serializers.ModelSerializer):
         )
 
 
-class StudentGradeScheduleRetrieveSubSerializer(serializers.ModelSerializer):
-    grades = serializers.SerializerMethodField()
-    subject_class = ClassSerializer()
-
-    class Meta:
-        model = models.EnrolledClass
-        fields = "__all__"
-
-    def get_grade(self, obj):
-        if hasattr(obj, "grades"):
-            return ClassGradeSerializer(obj.grades).data
-        return None
-
-
 class StudentRetrieveSerializer(serializers.ModelSerializer):
     AcademicYearSerializer = inline_serializer_class(
         model=AcademicYear,
@@ -577,15 +563,6 @@ class EnrollmentSubjectScheduleRetrieveSubSerializer(serializers.ModelSerializer
 
     def get_student(self, obj) -> models.Student:
         return StudentListSerializer(obj.enrollment.student).data
-
-
-class StudentGradeScheduleRetrieveSubSerializer(serializers.ModelSerializer):
-    grades = ClassGradeSerializer()
-    klass = ClassSerializer()
-
-    class Meta:
-        model = models.EnrolledClass
-        fields = "__all__"
 
 
 class EnrollmentRemarkUpdateSerializer(serializers.Serializer):

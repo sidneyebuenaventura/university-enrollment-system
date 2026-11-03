@@ -250,10 +250,6 @@ class StaffViewSet(
         # )
         # event.publish()
 
-    def perform_partial_update(self, serializer):
-        user = services.staff_update(user=user, data=serializer.validated_data)
-        serializer.instance = user
-
     def perform_destroy(self, instance):
         services.staff_delete(user=instance)
 
