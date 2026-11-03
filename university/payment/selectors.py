@@ -39,21 +39,18 @@ def soa_get_for_payment(*, user: User, raise_exception: bool = False):
 
 
 def soa_get_latest(*, user: User, raise_exception: bool = False):
-    try:
-        soa = (
-            StatementOfAccount.objects.filter(user=user, enrollment__isnull=False)
-            .order_by(
-                "-enrollment__academic_year__year_start",
-                "-enrollment__year_level",
-                "-enrollment__semester__order",
-            )
-            .first()
+    soa = (
+        StatementOfAccount.objects.filter(user=user, enrollment__isnull=False)
+        .order_by(
+            "-enrollment__academic_year__year_start",
+            "-enrollment__year_level",
+            "-enrollment__semester__order",
         )
-    except StatementOfAccount.DoesNotExist:
-        if raise_exception:
-            raise exceptions.NotFound("No Statement of Acccount found.") from None
-        else:
-            return None
+        .first()
+    )
+
+    if not soa and raise_exception:
+        raise exceptions.NotFound("No Statement of Account found.")
 
     return soa
 

@@ -149,6 +149,12 @@ class TestSoaGetLatest:
         assert soa == latest
         assert soa != old
 
+    def test_raises_when_student_has_no_soa(self, student):
+        assert selectors.soa_get_latest(user=student.user) is None
+
+        with pytest.raises(exceptions.NotFound):
+            selectors.soa_get_latest(user=student.user, raise_exception=True)
+
 
 @pytest.mark.django_db
 class TestTransactionLookups:
