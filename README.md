@@ -109,6 +109,13 @@ uv run python manage.py migrate
 uv run pytest
 ```
 
+Code is formatted and linted with [Ruff](https://docs.astral.sh/ruff/). Install
+the git hooks so it runs on every commit:
+
+```bash
+uv run pre-commit install
+```
+
 ## Configuration
 
 Settings come from environment variables (see [.env.example](.env.example)).
