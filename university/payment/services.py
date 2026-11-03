@@ -575,8 +575,8 @@ def journal_voucher_process(*, journal_voucher: JournalVoucher):
 def soa_create(
     *, enrollment: Enrollment, discount_auto_apply: bool = False, override: bool = False
 ):
-    if hasattr(enrollment, "soa") and not override:
-        return enrollment.soa
+    if hasattr(enrollment, "statement_of_account") and not override:
+        return enrollment.statement_of_account
 
     student = enrollment.student
     academic_year = enrollment.academic_year

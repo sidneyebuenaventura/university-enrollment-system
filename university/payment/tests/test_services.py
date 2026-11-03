@@ -287,3 +287,14 @@ class TestSoaCreate:
         assert enrollment.student.user.statement_of_accounts.count() == 1
         assert soa.lines.count() == 3
         assert soa.transactions.count() == 2
+
+    def test_existing_statement_is_kept_without_override(self, enrollment):
+        soa = services.soa_create(enrollment=enrollment)
+        soa.transactions.create(
+            student=enrollment.student, description="Payment", amount=Decimal("-500")
+        )
+        enrollment.refresh_from_db()
+
+        services.soa_create(enrollment=enrollment)
+
+        assert soa.get_remaining_balance() == Decimal("1250.00")
