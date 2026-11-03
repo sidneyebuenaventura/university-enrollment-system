@@ -575,8 +575,8 @@ def journal_voucher_process(*, journal_voucher: JournalVoucher):
 def soa_create(
     *, enrollment: Enrollment, discount_auto_apply: bool = False, override: bool = False
 ):
-    if hasattr(enrollment, "soa") and not override:
-        return enrollment.soa
+    if hasattr(enrollment, "statement_of_account") and not override:
+        return enrollment.statement_of_account
 
     student = enrollment.student
     academic_year = enrollment.academic_year
@@ -633,13 +633,7 @@ def soa_create(
                 and curriculum_subject.category_rate
                 not in discount.category_rate_exemption
             ):
-                subject_fee = rate * subject.units
-                print(
-                    enrolled_class.klass.tuition_fee_rate.rate,
-                    enrolled_class.klass.subject.units,
-                    curriculum_subject.category_rate,
-                )
-                discount_rate_total += subject_fee
+                discount_rate_total += rate * subject.units
 
     # TODO: Revisit upon Fee Specification Clarification
     # total_units = tf_pro_units + tf_non_pro_units
