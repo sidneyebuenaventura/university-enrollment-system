@@ -12,7 +12,13 @@ from university.core.cms.models import (
 from university.core.cms.selectors import class_tuition_fee_get, subject_has_class
 from university.payment.models import BukasTransaction, StatementOfAccount
 
-from .models import EnrolledClass, EnrolledClassGrade, Enrollment, Student
+from .models import (
+    EnrolledClass,
+    EnrolledClassGrade,
+    Enrollment,
+    EnrollmentGrade,
+    Student,
+)
 
 User = get_user_model()
 
@@ -129,17 +135,17 @@ def enrollment_curriculum_subject_is_completed(
 ) -> bool:
     enrolled_class = (
         enrollment.enrolled_classes.filter(klass__subject=curriculum_subject.subject)
-        .select_related("grade")
+        .select_related("grades")
         .first()
     )
 
     if not enrolled_class:
         return False
 
-    if not hasattr(enrolled_class, "grade"):
+    if not hasattr(enrolled_class, "grades"):
         return False
 
-    return enrolled_class.grade.status == EnrolledClassGrade.Statuses.PASSED
+    return enrolled_class.grades.status == EnrolledClassGrade.Statuses.PASSED
 
 
 def enrollment_total_units_get(*, enrollment: Enrollment) -> int:
@@ -161,8 +167,8 @@ def student_enrollment_passed_units_get(*, enrollment: Enrollment) -> int:
     units = 0
 
     for enrolled_class in enrolled_classes:
-        if hasattr(enrolled_class, "grade"):
-            if enrolled_class.grade.status == EnrolledClassGrade.Statuses.PASSED:
+        if hasattr(enrolled_class, "grades"):
+            if enrolled_class.grades.status == EnrolledClassGrade.Statuses.PASSED:
                 if enrolled_class.klass.subject:
                     units += enrolled_class.klass.subject.units
 
@@ -174,8 +180,8 @@ def student_enrollment_failed_units_get(*, enrollment: Enrollment) -> int:
     units = 0
 
     for enrolled_class in enrolled_classes:
-        if hasattr(enrolled_class, "grade"):
-            if enrolled_class.grade.status == EnrolledClassGrade.Statuses.FAILED:
+        if hasattr(enrolled_class, "grades"):
+            if enrolled_class.grades.status == EnrolledClassGrade.Statuses.FAILED:
                 if enrolled_class.klass.subject:
                     units += enrolled_class.klass.subject.units
 
@@ -219,14 +225,18 @@ def enrollment_bukas_transaction_get(*, soa: StatementOfAccount) -> BukasTransac
 
 def student_has_failed_subject_get(*, student: Student) -> bool:
     latest_enrollment = enrollment_get_latest_enrolled(user=student.user)
-    if hasattr(latest_enrollment, "grading_status"):
-        return latest_enrollment.grading_status == Enrollment.GradingStatuses.FAILED
+    if hasattr(latest_enrollment, "grade"):
+        grading_status = latest_enrollment.grade.grading_status
+        return grading_status == EnrollmentGrade.GradingStatuses.FAILED
     return False
 
 
 def student_has_remaining_balance_get(*, user: User) -> bool:
     latest_enrollment = enrollment_get_latest_enrolled(user=user)
-    return latest_enrollment.statement_of_account.get_remaining_balance() > 0
+    soa = getattr(latest_enrollment, "statement_of_account", None)
+    if not soa:
+        return False
+    return soa.get_remaining_balance() > 0
 
 
 def next_semester_enrollment_list() -> list[Enrollment]:

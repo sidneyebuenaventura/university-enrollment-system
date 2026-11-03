@@ -734,13 +734,6 @@ def grade_sheet_process(*, grade_sheet: models.GradeSheet):
                 "final_grade": cells[12].value or None,
             }
 
-        if not enrolled_class_grade or (
-            enrolled_class_grade
-            and enrolled_class_grade.prelim_grade_state
-            in models.EnrolledClassGrade.EDITABLE_GRADE_STATES
-        ):
-            pass
-
         grade_sheet.rows.create(student=student, status=status, **data)
 
     grade_sheet.status = models.GradeSheet.Statuses.COMPLETED
@@ -809,7 +802,7 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
 
     try:
         file_contents = gwa_sheet.file.read()
-        csv_data = file_contents.decode().split("\r\n")
+        csv_data = file_contents.decode().splitlines()
         reader = csv.reader(csv_data)
 
         for row in reader:
@@ -832,16 +825,15 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
                 "status": row[6],
             }
 
-            result, err = enrollment_grade_process(data=data)
+            result, _ = enrollment_grade_process(data=data)
             if result:
                 stats["success"] += 1
             else:
-                print(err)
                 stats["invalid"] += 1
 
     except (UnicodeDecodeError, botocore.exceptions.ClientError) as error:
         _gwa_sheet_failed(
-            journal_voucher=gwa_sheet,
+            gwa_sheet=gwa_sheet,
             error="Error reading gwa sheet file",
         )
         capture_exception(error)
@@ -913,9 +905,7 @@ def enrollment_grade_process(*, data: dict) -> tuple:
         data.get("gwa") if data.get("gwa") != "NO GWA" else Decimal(0)
     )
     enrollment.grade.grading_status = grading_status_mapping.get(data.get("status"))
-    enrollment.grade.pass_percentage = grading_status_mapping.get(
-        data.get("pass_percentage")
-    )
+    enrollment.grade.pass_percentage = data.get("pass_percentage") or None
     enrollment.grade.remark_code = remark_code
     enrollment.grade.save()
 
