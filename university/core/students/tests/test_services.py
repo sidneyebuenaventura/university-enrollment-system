@@ -13,11 +13,16 @@ from university.core.accounts.tests.factories import (
 from university.core.cms.tests.factories import ClassFactory
 from university.core.students import services
 from university.core.students.models import (
+    AddSubjectRequest,
+    ChangeScheduleRequest,
     EnrolledClass,
     Enrollment,
     EnrollmentEvent,
     EnrollmentGrade,
     EnrollmentStatus,
+    OpenClassRequest,
+    StudentRequestTypes,
+    WithdrawalRequest,
 )
 from university.core.students.tests.factories import EnrollmentFactory
 from university.payment.tests.factories import StatementOfAccountFactory
@@ -284,4 +289,122 @@ class TestEnrollmentStatusEvaluate:
         assert previous.get_available_credits() == 0
         assert enrollment.statement_of_account.get_available_credits() == Decimal(
             "500.00"
+        )
+
+
+@pytest.mark.django_db
+class TestStudentRequestCreate:
+    @pytest.mark.parametrize(
+        "request_type, model",
+        [
+            (StudentRequestTypes.CHANGE_SCHEDULE, ChangeScheduleRequest),
+            (StudentRequestTypes.ADD_SUBJECT, AddSubjectRequest),
+            (StudentRequestTypes.OPEN_CLASS, OpenClassRequest),
+            (StudentRequestTypes.PARTIAL_WITHDRAWAL, WithdrawalRequest),
+        ],
+    )
+    def test_creates_request_with_history(self, student, request_type, model):
+        data = {"type": request_type, "detail": "MATH 101", "reason": "Conflict"}
+
+        result = services.student_request_create(student=student, data=data)
+
+        request = model.objects.get(student=student)
+        assert result == {"request_no": request.request_no}
+        history = request.review_histories.get()
+        assert history.user == student.user
+        assert history.status == "Pending"
+
+    def test_full_withdrawal_category(self, student):
+        data = {
+            "type": StudentRequestTypes.FULL_WITHDRAWAL,
+            "detail": "All subjects",
+            "reason": "Moving abroad",
+        }
+
+        services.student_request_create(student=student, data=data)
+
+        request = WithdrawalRequest.objects.get(student=student)
+        assert request.category == WithdrawalRequest.Categories.FULL_WITHDRAWAL
+
+
+@pytest.mark.django_db
+class TestStudentRequestUpdate:
+    def test_approved_change_schedule_notifies_student(
+        self, change_schedule_request, staff_user, publish
+    ):
+        request = services.change_schedule_request_update(
+            request=change_schedule_request,
+            user=staff_user,
+            data={"status": ChangeScheduleRequest.Statuses.APPROVED, "remarks": "OK"},
+        )
+
+        history = request.review_histories.get()
+        assert history.user == staff_user
+        assert history.status == "Approved"
+        assert history.remarks == "OK"
+        publish.assert_called_once_with(
+            events.REQUEST_CHANGE_SCHEDULE_APPROVED, object=request, remarks="OK"
+        )
+
+    def test_in_review_add_subject_does_not_notify(
+        self, add_subject_request, staff_user, publish
+    ):
+        services.add_subject_request_update(
+            request=add_subject_request,
+            user=staff_user,
+            data={"status": AddSubjectRequest.Statuses.INREVIEW, "remarks": ""},
+        )
+
+        add_subject_request.refresh_from_db()
+        assert add_subject_request.status == AddSubjectRequest.Statuses.INREVIEW
+        publish.assert_not_called()
+
+    def test_open_class_for_approval(self, open_class_request, staff_user, publish):
+        data = {"status": OpenClassRequest.Statuses.FOR_APPROVAL, "remarks": "Noted"}
+
+        services.open_class_request_update(
+            request=open_class_request, user=staff_user, data=data
+        )
+        publish.assert_called_once_with(
+            events.REQUEST_OPEN_CLASS_FOR_APPROVAL,
+            object=open_class_request,
+            remarks="Noted",
+        )
+
+        # Another review without a status change only notifies when asked to
+        publish.reset_mock()
+        services.open_class_request_update(
+            request=open_class_request, user=staff_user, data=data
+        )
+        publish.assert_not_called()
+
+        services.open_class_request_update(
+            request=open_class_request,
+            user=staff_user,
+            data={**data, "notify_student": True},
+        )
+        publish.assert_called_once_with(
+            events.REQUEST_OPEN_CLASS_REVIEW_UPDATED,
+            object=open_class_request,
+            remarks="Noted",
+        )
+        assert open_class_request.review_histories.count() == 3
+
+    def test_encoded_withdrawal_notifies_student(
+        self, withdrawal_request, staff_user, publish
+    ):
+        services.withdrawal_request_update(
+            request=withdrawal_request,
+            user=staff_user,
+            data={"status": WithdrawalRequest.Statuses.ENCODED, "remarks": "Done"},
+        )
+
+        publish.assert_called_once_with(
+            events.REQUEST_WITHDRAWAL_APPROVED,
+            object=withdrawal_request,
+            remarks="Done",
+            request_type="Partial Withdrawal",
+            request_description="Partial Withdrawal request",
+            status="Encoded",
+            prev_status="Pending",
         )
