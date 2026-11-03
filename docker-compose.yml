@@ -5,7 +5,7 @@ volumes:
 
 services:
   db:
-    image: postgres:14.2-alpine
+    image: postgres:17-alpine
     container_name: university_db
     environment:
       - POSTGRES_DB=university
@@ -17,7 +17,7 @@ services:
       - "5432"
 
   broker:
-    image: rabbitmq:3.9-management-alpine
+    image: rabbitmq:4.1-management-alpine
     container_name: university_broker
     ports:
       - 8080:15672
