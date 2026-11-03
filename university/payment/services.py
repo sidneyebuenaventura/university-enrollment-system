@@ -580,7 +580,6 @@ def soa_create(
 
     student = enrollment.student
     academic_year = enrollment.academic_year
-    course = student.course
 
     discount = None
 

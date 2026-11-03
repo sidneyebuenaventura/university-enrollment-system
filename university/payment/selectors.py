@@ -31,7 +31,7 @@ def soa_get_for_payment(*, user: User, raise_exception: bool = False):
         soa = enrollment.statement_of_account
     except StatementOfAccount.DoesNotExist:
         if raise_exception:
-            raise exceptions.NotFound("No Statement of Account for payment.")
+            raise exceptions.NotFound("No Statement of Account for payment.") from None
         else:
             return None
 
@@ -51,7 +51,7 @@ def soa_get_latest(*, user: User, raise_exception: bool = False):
         )
     except StatementOfAccount.DoesNotExist:
         if raise_exception:
-            raise exceptions.NotFound("No Statement of Acccount found.")
+            raise exceptions.NotFound("No Statement of Acccount found.") from None
         else:
             return None
 

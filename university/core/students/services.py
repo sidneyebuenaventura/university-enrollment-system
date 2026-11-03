@@ -200,7 +200,7 @@ def enrollment_step_3_subjects(*, enrollment: models.Enrollment, data: dict):
         models.EnrolledClass.objects.create(**enrolled_class_data)
 
     _enrollment_update(enrollment=enrollment, data={"step": data.get("step")})
-    soa = soa_create(enrollment=enrollment, override=True)
+    soa_create(enrollment=enrollment, override=True)
 
 
 def enrollment_step_4_payments(*, enrollment: models.Enrollment, data: dict):
@@ -930,8 +930,8 @@ def student_request_review_history_create(
 
 def _generate_choice_label_mapping(*, choices) -> str:
     choice_mapping = {}
-    for choice in choices:
-        choice_mapping[choice.value] = choice.label
+    for item in choices:
+        choice_mapping[item.value] = item.label
 
     return choice_mapping
 

@@ -55,7 +55,7 @@ class User(SoftDeleteMixin, AbstractUser):
     @property
     def type(self):
         try:
-            self.student
+            self.student  # noqa: B018
             return self.Types.STUDENT
         except ObjectDoesNotExist:
             pass

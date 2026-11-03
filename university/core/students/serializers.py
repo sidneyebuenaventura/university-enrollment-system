@@ -1358,7 +1358,7 @@ class ChangeRequestRequestListSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1398,7 +1398,7 @@ class ChangeRequestRequestRetrieveSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1419,7 +1419,7 @@ class AddSubjectRequestListSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1459,7 +1459,7 @@ class AddSubjectRequestRetrieveSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1480,7 +1480,7 @@ class OpenClassRequestListSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1520,7 +1520,7 @@ class OpenClassRequestRetrieveSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
     def get_review_histories(self, obj) -> ReviewHistorySerializer(many=True):
@@ -1554,7 +1554,7 @@ class WithdrawalRequestListSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1594,7 +1594,7 @@ class WithdrawalRequestRetrieveSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
     def get_review_histories(self, obj) -> ReviewHistorySerializer(many=True):

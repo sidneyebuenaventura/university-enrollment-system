@@ -45,7 +45,7 @@ class StudentFactory(DjangoModelFactory):
 
     type = models.Student.Types.STUDENT
     status = factory.Iterator(models.Student.Statuses)
-    id_number = factory.Sequence(lambda n: "STUDENT-2022-%05d" % n)
+    id_number = factory.Sequence(lambda n: f"STUDENT-2022-{n:05d}")
 
     first_name = factory.LazyFunction(fake.first_name)
     middle_name = factory.LazyFunction(fake.last_name)

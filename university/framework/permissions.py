@@ -53,7 +53,7 @@ class IsNewStudentUser(BasePermission):
             return False
 
         try:
-            request.user.student
+            request.user.student  # noqa: B018
         except ObjectDoesNotExist:
             return False
 
@@ -73,7 +73,7 @@ class IsStudentUser(BasePermission):
             return False
 
         try:
-            request.user.student
+            request.user.student  # noqa: B018
         except ObjectDoesNotExist:
             return False
 
@@ -94,7 +94,7 @@ class IsStudentUserNPC(BasePermission):
             return False
 
         try:
-            request.user.student
+            request.user.student  # noqa: B018
         except ObjectDoesNotExist:
             return False
 

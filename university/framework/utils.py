@@ -47,21 +47,9 @@ class LoadScreen:
 
     def spinning_cursor(self):
         while True:
-            for cursor in "|/-\\":
-                yield cursor
+            yield from "|/-\\"
 
     def print_statement(self, message, type):
-        color = self.colors.get("HEADER")
-        if type == "created":
-            color = self.colors.get("CREATED")
-        elif type == "updated":
-            color = self.colors.get("UPDATED")
-        elif type == "invalid":
-            color = self.colors.get("INVALID")
-        else:
-            color = self.colors.get("HEADER")
-
-        # print(f"{color} {message}\033[0m")
         print(message)
 
     def spinner(self, spinner):

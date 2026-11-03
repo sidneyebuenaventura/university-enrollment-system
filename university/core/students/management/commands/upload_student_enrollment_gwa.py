@@ -23,7 +23,6 @@ class Command(BaseCommand):
             updated_counter = 0
             invalid_counter = 0
 
-            spinner = load_screen.spinning_cursor()
             sys.stdout.write("Enrollment GWA data upload... ")
 
             for row in reader:

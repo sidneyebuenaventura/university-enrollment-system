@@ -20,8 +20,7 @@ class ReservedRoleMetaclass(type):
         return klass
 
     def __iter__(self):
-        for role in self._declared_roles:
-            yield role
+        yield from self._declared_roles
 
 
 class ReservedRole(metaclass=ReservedRoleMetaclass):

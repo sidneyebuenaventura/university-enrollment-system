@@ -37,7 +37,6 @@ class Command(BaseCommand):
             invalid_student_counter = 0
             invalid_enrollment_counter = 0
 
-            spinner = load_screen.spinning_cursor()
             sys.stdout.write("Enrollment Fee Specification data upload... \n")
 
             for row in reader:

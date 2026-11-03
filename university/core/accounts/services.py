@@ -221,7 +221,7 @@ def user_password_reset_confirm(*, uid: str, token: str, password: str):
         uid = force_str(uid_decoder(uid))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        raise exceptions.ValidationError({"detail": "Invalid data"})
+        raise exceptions.ValidationError({"detail": "Invalid data"}) from None
 
     if not token_generator.check_token(user, token):
         raise exceptions.ValidationError({"detail": "Invalid data"})

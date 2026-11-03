@@ -177,7 +177,7 @@ class PersonnelFactory(DjangoModelFactory):
     user = factory.SubFactory(StaffUserFactory, is_staff=True)
 
     ref_id = factory.LazyFunction(fake.pyint)
-    emp_id = factory.Sequence(lambda n: "EMP-2022-%05d" % n)
+    emp_id = factory.Sequence(lambda n: f"EMP-2022-{n:05d}")
     old_id = factory.LazyFunction(lambda: fake.pystr(5, 5).upper())
 
     first_name = factory.LazyFunction(fake.first_name)

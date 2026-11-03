@@ -21,7 +21,6 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        spinner = load_screen.spinning_cursor()
         sys.stdout.write("Statement of account generation... ")
         counter = 0
 
