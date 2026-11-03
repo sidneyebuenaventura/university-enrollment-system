@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -334,21 +336,21 @@ class TestFacultyViewSet:
         user_data = faculty.user
 
         for field in user_assert_fields:
-            response.data.get("user").get(field) == getattr(user_data, field)
+            assert response.data.get("user").get(field) == getattr(user_data, field)
 
         assert_fields = [
             "ref_id",
             "emp_id",
-            "last_name",
             "first_name",
             "last_name",
             "rank",
             "category",
             "employment_type",
-            "employment_date",
         ]
         for field in assert_fields:
-            response.data.get(field) == getattr(faculty, field)
+            assert response.data.get(field) == getattr(faculty, field)
+
+        assert response.data["employment_date"] == str(faculty.employment_date)
 
         assert (
             len(response.data.get("user").get("departments"))
@@ -361,14 +363,23 @@ class TestFacultyViewSet:
 
 @pytest.mark.django_db
 class TestAcademicYearCurrentRetrieveAPI:
-    def test_academic_year_current_retrieve(self, staff_api_client, academic_year):
+    def test_academic_year_current_retrieve(
+        self, staff_api_client, academic_year_factory
+    ):
+        today = date.today()
+        academic_year = academic_year_factory(
+            year_start=today.year,
+            date_start=today - timedelta(days=30),
+            date_end=today + timedelta(days=300),
+        )
+
         url = reverse("university.core.accounts:academic-years-current")
         response = staff_api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert_fields = ["year_start", "year_end", "date_start", "date_end"]
-
-        for field in assert_fields:
-            response.data.get(field) == getattr(academic_year, field)
+        assert response.data["year_start"] == academic_year.year_start
+        assert response.data["year_end"] == academic_year.year_end
+        assert response.data["date_start"] == str(academic_year.date_start)
+        assert response.data["date_end"] == str(academic_year.date_end)
 
 
 @pytest.mark.django_db
@@ -380,6 +391,6 @@ class TestStaffProfileRetrieveAPI:
         assert_fields = ["username", "email"]
 
         for field in assert_fields:
-            response.data.get(field) == getattr(staff_user, field)
+            assert response.data.get(field) == getattr(staff_user, field)
 
-        len(response.data.get("roles")) == staff_user.groups.count()
+        assert len(response.data.get("roles")) == staff_user.groups.count()

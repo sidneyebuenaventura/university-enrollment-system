@@ -176,7 +176,7 @@ class ReligionFactory(DjangoModelFactory):
 class PersonnelFactory(DjangoModelFactory):
     user = factory.SubFactory(StaffUserFactory, is_staff=True)
 
-    ref_id = factory.LazyFunction(fake.pyint)
+    ref_id = factory.LazyFunction(lambda: str(fake.pyint()))
     emp_id = factory.Sequence(lambda n: f"EMP-2022-{n:05d}")
     old_id = factory.LazyFunction(lambda: fake.pystr(5, 5).upper())
 

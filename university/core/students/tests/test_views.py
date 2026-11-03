@@ -235,7 +235,7 @@ class TestInterviewedFailedStudentPerSchoolListAPIView:
 
 
 @pytest.mark.django_db
-class TestInterviewedFailedStudentPerSchoolListAPIView:
+class TestEnrolleesScholarsPerSchoolListAPIView:
     url = reverse("university.core.students:enrollees-scholars-per-school")
 
     def test_enrollees_scholars_per_school(self, staff_api_client):
@@ -301,13 +301,15 @@ class TestStudentChangeScheduleRequestListRetrieveUpdate:
 @pytest.mark.django_db
 class TestStudentAddSubjectListRetrieveUpdate:
     @apply_perms("core_students.view_addsubjectrequest", client="staff_api_client")
-    def test_add_subject_request_retrieve(self, staff_api_client, add_subject_request):
-        url = reverse(
-            "university.core.students:add-subject-requests-detail",
-            kwargs={"pk": add_subject_request.pk},
-        )
+    def test_add_subject_request_list(
+        self, staff_api_client, add_subject_request_factory
+    ):
+        requests = [add_subject_request_factory() for _ in range(5)]
+        url = reverse("university.core.students:add-subject-requests-list")
         response = staff_api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
+        assert_paginated_response(response.data)
+        assert len(response.data["results"]) == len(requests)
 
     @apply_perms("core_students.view_addsubjectrequest", client="staff_api_client")
     def test_add_subject_request_retrieve(self, staff_api_client, add_subject_request):
@@ -319,7 +321,7 @@ class TestStudentAddSubjectListRetrieveUpdate:
         assert response.status_code == status.HTTP_200_OK
 
     @apply_perms("core_students.change_addsubjectrequest", client="staff_api_client")
-    def test_open_class_request_update(self, staff_api_client, add_subject_request):
+    def test_add_subject_request_update(self, staff_api_client, add_subject_request):
         data = {
             "status": AddSubjectRequest.Statuses.INREVIEW,
             "remarks": fake.sentence(),
