@@ -62,8 +62,8 @@ university/
 
 ## Tech stack
 
-Python · Django · Django REST Framework · PostgreSQL · RabbitMQ · Celery ·
-drf-spectacular (OpenAPI) · Docker Compose · pytest
+Python 3.12, Django 5.2, Django REST Framework, PostgreSQL, RabbitMQ, Celery,
+drf-spectacular (OpenAPI), Docker Compose, uv, pytest
 
 ## Getting started
 
@@ -102,6 +102,17 @@ docker compose exec <service> python manage.py <command>
 ```
 
 See the [Makefile](Makefile) for more.
+
+### Without Docker
+
+Dependencies are managed with [uv](https://docs.astral.sh/uv/). You still need
+a Postgres database, and RabbitMQ for the event consumers.
+
+```bash
+uv sync
+uv run python manage.py migrate
+uv run pytest
+```
 
 ## Configuration
 
