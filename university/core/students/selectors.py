@@ -233,7 +233,10 @@ def student_has_failed_subject_get(*, student: Student) -> bool:
 
 def student_has_remaining_balance_get(*, user: User) -> bool:
     latest_enrollment = enrollment_get_latest_enrolled(user=user)
-    return latest_enrollment.statement_of_account.get_remaining_balance() > 0
+    soa = getattr(latest_enrollment, "statement_of_account", None)
+    if not soa:
+        return False
+    return soa.get_remaining_balance() > 0
 
 
 def next_semester_enrollment_list() -> list[Enrollment]:

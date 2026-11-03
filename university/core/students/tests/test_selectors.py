@@ -15,6 +15,7 @@ from university.core.students.tests.factories import (
     EnrolledClassFactory,
     EnrollmentFactory,
 )
+from university.payment.tests.factories import StatementOfAccountFactory
 
 ENROLLED = Enrollment.Statuses.ENROLLED
 
@@ -129,3 +130,17 @@ class TestEnrollmentBlocks:
         )
         enrollment.refresh_from_db()
         assert selectors.student_has_failed_subject_get(student=student)
+
+    def test_has_remaining_balance(self, student, account_transaction_factory):
+        soa = StatementOfAccountFactory(
+            enrollment=EnrollmentFactory(student=student, status=ENROLLED)
+        )
+        account_transaction_factory(soa=soa, amount=Decimal("5000.00"))
+        assert selectors.student_has_remaining_balance_get(user=student.user)
+
+        account_transaction_factory(soa=soa, amount=Decimal("-5000.00"))
+        assert not selectors.student_has_remaining_balance_get(user=student.user)
+
+    def test_new_student_is_not_blocked(self, student):
+        assert not selectors.student_has_failed_subject_get(student=student)
+        assert not selectors.student_has_remaining_balance_get(user=student.user)
