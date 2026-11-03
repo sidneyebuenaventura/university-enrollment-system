@@ -2,6 +2,7 @@ from decimal import Decimal
 from unittest import mock
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import exceptions
 
 from university.core import events
@@ -10,6 +11,7 @@ from university.core.accounts.tests.factories import (
     AcademicYearFactory,
     SemesterFactory,
 )
+from university.core.cms.models import Semesters
 from university.core.cms.tests.factories import ClassFactory
 from university.core.students import services
 from university.core.students.models import (
@@ -20,6 +22,7 @@ from university.core.students.models import (
     EnrollmentEvent,
     EnrollmentGrade,
     EnrollmentStatus,
+    GeneralWeightedAverageSheet,
     OpenClassRequest,
     StudentRequestTypes,
     WithdrawalRequest,
@@ -408,3 +411,81 @@ class TestStudentRequestUpdate:
             status="Encoded",
             prev_status="Pending",
         )
+
+
+@pytest.mark.django_db
+class TestGwaSheetProcess:
+    HEADER = "ID_NO,NAME,SCHOOL_YR,TERM,GWA,PASS_PCT,STATUS,REMARK_CODE"
+
+    @pytest.fixture(autouse=True)
+    def media_root(self, settings, tmp_path):
+        settings.MEDIA_ROOT = tmp_path
+
+    @pytest.fixture
+    def enrollment(self, student):
+        return EnrollmentFactory(
+            student=student,
+            academic_year=AcademicYearFactory(year_start=2040),
+            semester=SemesterFactory(term=Semesters.FIRST_SEMESTER),
+        )
+
+    def make_sheet(self, *rows, newline="\r\n"):
+        content = newline.join([self.HEADER, *rows]) + newline
+        return GeneralWeightedAverageSheet.objects.create(
+            file=SimpleUploadedFile("gwa.csv", content.encode())
+        )
+
+    def test_updates_enrollment_grades(self, enrollment):
+        id_number = enrollment.student.id_number
+        sheet = self.make_sheet(
+            f"{id_number},Student,2041,1,88.5,100,PASSED,",
+            "UNKNOWN-001,Nobody,2041,1,90,100,PASSED,",
+        )
+
+        services.gwa_sheet_process(gwa_sheet=sheet)
+
+        sheet.refresh_from_db()
+        assert sheet.status == GeneralWeightedAverageSheet.Statuses.COMPLETED
+        assert (sheet.total, sheet.success, sheet.invalid) == (2, 1, 1)
+
+        enrollment.refresh_from_db()
+        assert enrollment.grade.general_weighted_average == Decimal("88.5")
+        assert enrollment.grade.grading_status == EnrollmentGrade.GradingStatuses.PASSED
+
+    def test_no_gwa_is_saved_as_zero(self, enrollment):
+        ok, result = services.enrollment_grade_process(
+            data={
+                "id_no": enrollment.student.id_number,
+                "school_year": "2041",
+                "term": "1",
+                "gwa": "NO GWA",
+                "pass_percentage": "0",
+                "remark_code": "",
+                "status": "FAILED",
+            }
+        )
+
+        assert ok
+        assert result == enrollment
+        enrollment.grade.refresh_from_db()
+        assert enrollment.grade.general_weighted_average == 0
+        assert enrollment.grade.grading_status == EnrollmentGrade.GradingStatuses.FAILED
+
+    def test_unknown_enrollment(self, student):
+        result, error = services.enrollment_grade_process(
+            data={"id_no": student.id_number, "school_year": "2041", "term": "1"}
+        )
+
+        assert result is False
+        assert student.id_number in error
+
+    def test_create_queues_processing(self):
+        with mock.patch.object(
+            services.tasks.async_gwa_sheet_process, "delay"
+        ) as delay:
+            sheet = services.gwa_sheet_create(
+                file=SimpleUploadedFile("gwa.csv", b"ID_NO\r\n")
+            )
+
+        assert sheet.file_id
+        delay.assert_called_once_with(id=sheet.id)
