@@ -2,7 +2,6 @@ from datetime import date
 
 import factory
 import pytest
-from django.utils import timezone
 from factory.django import DjangoModelFactory
 from pytest_factoryboy import register
 

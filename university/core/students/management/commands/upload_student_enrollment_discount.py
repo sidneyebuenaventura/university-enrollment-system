@@ -35,7 +35,7 @@ class Command(BaseCommand):
             invalid_enrollment_counter = 0
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Enrollment Discount data upload... \n")
+            sys.stdout.write("Enrollment Discount data upload... \n")
 
             for row in reader:
                 # load_screen.spinner(spinner)

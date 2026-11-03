@@ -4,6 +4,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers as rest_serializers
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import (
+    CreateAPIView,
+    ListAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ModelSerializer
 from rest_framework.viewsets import ModelViewSet
@@ -24,11 +29,6 @@ from university.framework.views import (
     ListRetrieveViewSet,
     PermissionRequiredMixin,
     ViewSetSerializerClassMixin,
-)
-from rest_framework.generics import (
-    ListAPIView,
-    RetrieveUpdateDestroyAPIView,
-    CreateAPIView,
 )
 
 from . import models, serializers, services

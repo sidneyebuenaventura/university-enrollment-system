@@ -331,7 +331,7 @@ class TestFacultyViewSet:
 
         assert response.status_code == status.HTTP_200_OK
         user_assert_fields = ["id", "username", "first_name", "last_name", "status"]
-        user_data = getattr(faculty, "user")
+        user_data = faculty.user
 
         for field in user_assert_fields:
             response.data.get("user").get(field) == getattr(user_data, field)

@@ -3,10 +3,10 @@ from factory.django import DjangoModelFactory
 from pytest_factoryboy import register
 
 from university.core.accounts.tests.factories import (
+    AcademicYearFactory,
     DepartmentFactory,
     PersonnelFactory,
     SchoolFactory,
-    AcademicYearFactory,
 )
 from university.core.cms import models
 from university.core.students.models import Student

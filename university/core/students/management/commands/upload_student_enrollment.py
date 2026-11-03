@@ -165,7 +165,7 @@ class Command(BaseCommand):
             self.is_submitted = options["is_submitted"]
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Student Enrollment data upload... \n")
+            sys.stdout.write("Student Enrollment data upload... \n")
 
             for row in reader:
                 # load_screen.spinner(spinner)

@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Dict, List
 
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from django.db import transaction
@@ -26,7 +25,7 @@ from .models import (
 
 
 @transaction.atomic
-def staff_create(data: Dict) -> User:
+def staff_create(data: dict) -> User:
     _data = data.copy()
 
     department_ids = _data.pop("departments")
@@ -62,13 +61,13 @@ def user_module_create(*, user: User, modules=list[Module]) -> None:
 
 
 @transaction.atomic
-def personnel_create(*, user: User, data=Dict) -> Personnel:
+def personnel_create(*, user: User, data=dict) -> Personnel:
     personnel = Personnel.objects.create(user=user, **data)
     return personnel
 
 
 @transaction.atomic
-def staff_update(*, user: User, data: Dict) -> User:
+def staff_update(*, user: User, data: dict) -> User:
     _data = data.copy()
 
     department_ids = _data.pop("departments", None)
@@ -96,7 +95,7 @@ def staff_update(*, user: User, data: Dict) -> User:
 
 
 @transaction.atomic
-def personnel_update(*, user: User, data=Dict) -> Personnel:
+def personnel_update(*, user: User, data=dict) -> Personnel:
     user.personnel.__dict__.update(**data)
     user.personnel.save()
 
@@ -124,11 +123,11 @@ def personnel_delete(*, user: User) -> None:
     user.personnel.soft_delete()
 
 
-def user_role_create(*, roles: List[Role], user: User) -> None:
+def user_role_create(*, roles: list[Role], user: User) -> None:
     user.groups.add(*roles)
 
 
-def user_department_create(*, department_ids: List[int], user: User) -> None:
+def user_department_create(*, department_ids: list[int], user: User) -> None:
     user.departments.clear()
 
     for id in department_ids:
@@ -230,7 +229,7 @@ def user_password_reset_confirm(*, uid: str, token: str, password: str):
     user_password_change(user=user, password=password)
 
 
-def user_school_group_create(*, school_groups: List[Dict], user: User) -> None:
+def user_school_group_create(*, school_groups: list[dict], user: User) -> None:
     user.school_groups.all().delete()
     user.groups.clear()
 
@@ -246,7 +245,7 @@ def user_school_group_create(*, school_groups: List[Dict], user: User) -> None:
 
 
 @transaction.atomic
-def role_create(*, data: Dict) -> Role:
+def role_create(*, data: dict) -> Role:
     role_modules = data.pop("role_modules")
     role = Role.admin_objects.create(name=data.get("name"))
 
@@ -257,7 +256,7 @@ def role_create(*, data: Dict) -> Role:
 
 
 @transaction.atomic
-def role_update(*, role: Role, data: Dict) -> Role:
+def role_update(*, role: Role, data: dict) -> Role:
     _data = data.copy()
 
     role_modules = _data.pop("role_modules", None)

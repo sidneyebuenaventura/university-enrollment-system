@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
@@ -6,8 +7,6 @@ from university.core.accounts.models import AcademicYear, School
 from university.core.accounts.selectors import current_semester_get
 from university.core.students.models import Student
 from university.framework.serializers import ChoiceField, inline_serializer_class
-from django.db.models import Sum
-from university.payment import selectors
 
 from . import models
 

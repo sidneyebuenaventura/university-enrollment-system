@@ -1,15 +1,11 @@
 import argparse
 import csv
 import sys
-from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 
-from university.core.accounts.models import AcademicYear
-from university.core.cms.models import RemarkCode, Semesters
-from university.core.students.models import Enrollment, EnrollmentGrade, Student
-from university.framework.utils import LoadScreen
 from university.core.students.services import enrollment_grade_process
+from university.framework.utils import LoadScreen
 
 load_screen = LoadScreen()
 
@@ -28,7 +24,7 @@ class Command(BaseCommand):
             invalid_counter = 0
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Enrollment GWA data upload... ")
+            sys.stdout.write("Enrollment GWA data upload... ")
 
             for row in reader:
                 # load_screen.spinner(spinner)

@@ -9,10 +9,10 @@ from university.core.accounts.models import AcademicYear, Personnel, Semester
 from university.core.cms.models import (
     Class,
     ClassSchedule,
+    Course,
     Room,
     Semesters,
     Subject,
-    Course,
 )
 from university.framework.utils import LoadScreen
 
@@ -191,7 +191,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             self.spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Class data upload... \n")
+            sys.stdout.write("Class data upload... \n")
 
             chunk = []
             chunk_size = 1000

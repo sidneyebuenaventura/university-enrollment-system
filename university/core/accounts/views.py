@@ -19,9 +19,9 @@ from university.framework.events import EventObject, event_publisher
 from university.framework.pagination import PageNumberPagination
 from university.framework.permissions import (
     IsAdminUser,
+    IsAdminUserNPC,
     IsNewAdminUser,
     IsNewStudentUser,
-    IsAdminUserNPC,
     IsStudentUserNPC,
     IsSuperUserNPC,
 )

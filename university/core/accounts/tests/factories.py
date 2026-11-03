@@ -1,7 +1,6 @@
 from datetime import date
 
 import factory
-import pytest
 from django.contrib.auth import get_user_model
 from factory.django import DjangoModelFactory
 from pytest_factoryboy import register

@@ -1,5 +1,4 @@
 from decimal import Decimal
-from pickle import TRUE
 from random import randint
 
 from django.contrib.auth import get_user_model
@@ -7,10 +6,9 @@ from django.db.models import Sum
 from django.utils import timezone
 from rest_framework import exceptions
 
-from university.core.accounts.models import School, Semester, AcademicYear
+from university.core.accounts.models import School, Semester
 from university.core.students.selectors import (
     enrollment_get_for_payment,
-    enrollment_get_latest,
 )
 
 from .models import (

@@ -1,7 +1,6 @@
 import csv
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Union
 
 import botocore.exceptions
 import structlog
@@ -9,7 +8,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files import File
 from django.db import transaction as db_transaction
-from django.db.models import Sum
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from rest_framework import exceptions
@@ -34,7 +32,6 @@ from .models import (
     OverTheCounterTransaction,
     PaymentMethods,
     PaymentSettlement,
-    PaymentTransaction,
     StatementOfAccount,
 )
 from .selectors import (
@@ -797,7 +794,7 @@ def soa_create(
 
 
 def payment_transaction_expire(
-    *, transaction: Union[OverTheCounterTransaction, CashierTransaction]
+    *, transaction: OverTheCounterTransaction | CashierTransaction
 ):
     transaction.fail()
     transaction.error_message = (

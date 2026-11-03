@@ -15,7 +15,6 @@ class StudentUserDetailsSerializerExtension(OpenApiSerializerExtension):
     target_class = "university.core.accounts.serializers.StudentUserDetailsSerializer"
 
     def map_serializer(self, auto_schema, direction):
-        from university.core.accounts.serializers import ModuleSerializer
         from university.core.students.serializers import StudentRetrieveSerializer
 
         class TargetClass(self.target_class):

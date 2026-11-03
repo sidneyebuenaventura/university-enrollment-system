@@ -7,7 +7,6 @@ from university.core.accounts.selectors import current_semester_get, next_semest
 from university.core.cms.models import (
     Class,
     Course,
-    CurriculumPeriod,
     CurriculumSubject,
 )
 from university.core.cms.selectors import class_tuition_fee_get, subject_has_class

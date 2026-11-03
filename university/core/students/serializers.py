@@ -1,12 +1,11 @@
 from decimal import Decimal
-from typing import Union
 
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 from rest_framework import serializers
 
-from university.core.accounts.models import AcademicYear, Personnel, School, Semester
+from university.core.accounts.models import AcademicYear, School, Semester
 from university.core.accounts.selectors import current_semester_get, next_semester_get
 from university.core.cms.models import (
     Building,
@@ -515,7 +514,7 @@ class EnrollmentCurriculumSubjectListSerializer(serializers.ModelSerializer):
         model = CurriculumSubject
         fields = ("subject", "is_completed")
 
-    def get_is_completed(self, obj) -> Union[bool, None]:
+    def get_is_completed(self, obj) -> bool | None:
         enrollment = self.context.get("enrollment")
         if not enrollment:
             return None

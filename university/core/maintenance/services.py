@@ -6,11 +6,11 @@ from university.core import events
 from university.core.accounts.constants import MobileModule, ReservedRole
 from university.core.accounts.models import Role
 from university.core.maintenance.models import EnrollmentSchedule
-from university.core.students.selectors import (
-    student_has_remaining_balance_get,
-    student_has_failed_subject_get,
-)
 from university.core.students.models import Student
+from university.core.students.selectors import (
+    student_has_failed_subject_get,
+    student_has_remaining_balance_get,
+)
 
 from . import tasks
 

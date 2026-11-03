@@ -27,7 +27,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Curriculum Period data upload... ")
+            sys.stdout.write("Curriculum Period data upload... ")
 
             created_counter = 0
             invalid_counter = 0

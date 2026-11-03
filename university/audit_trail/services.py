@@ -1,5 +1,3 @@
-from typing import Union
-
 from django.db import transaction
 
 from university.framework.events import (
@@ -13,7 +11,7 @@ from .models import TrailLog
 
 
 def trail_log_create(
-    event: Union[CreateModelEvent, UpdateModelEvent, DeleteModelEvent],
+    event: CreateModelEvent | UpdateModelEvent | DeleteModelEvent,
     action: TrailLog.Actions,
 ) -> TrailLog:
     actor = event.actor

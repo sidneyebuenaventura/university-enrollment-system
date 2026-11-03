@@ -30,7 +30,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Miscellaneous Fee Specification data upload... ")
+            sys.stdout.write("Miscellaneous Fee Specification data upload... ")
 
             for row in reader:
                 load_screen.spinner(spinner)

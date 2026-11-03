@@ -25,7 +25,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Curriculum Subject Requisite data upload... ")
+            sys.stdout.write("Curriculum Subject Requisite data upload... ")
 
             created_counter = 0
             updated_counter = 0

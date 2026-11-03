@@ -24,7 +24,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Fee data upload... ")
+            sys.stdout.write("Fee data upload... ")
 
             Fee.objects.filter(academic_year__isnull=True).delete()
 

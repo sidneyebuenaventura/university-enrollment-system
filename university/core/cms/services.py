@@ -1,4 +1,4 @@
-from .models import Room, Subject, Class, ClassGradeState
+from .models import Class, ClassGradeState, Room, Subject
 
 
 def room_delete(*, room: Room) -> None:

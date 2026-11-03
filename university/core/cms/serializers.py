@@ -395,7 +395,6 @@ class OpenClassEnrolleePerCourseSerializer(serializers.ModelSerializer):
         return classes.count()
 
     def get_no_of_enrollees(self, obj) -> int:
-        from university.core.students.models import Enrollment
 
         year_level = self.context["year_level"]
         school = self.context["school"]

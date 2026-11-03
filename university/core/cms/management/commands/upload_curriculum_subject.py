@@ -3,6 +3,7 @@ import csv
 import sys
 
 from django.core.management.base import BaseCommand
+
 from university.core.cms.models import (
     Curriculum,
     CurriculumPeriod,
@@ -41,7 +42,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Curriculum Subject data upload... ")
+            sys.stdout.write("Curriculum Subject data upload... ")
 
             created_counter = 0
             updated_counter = 0

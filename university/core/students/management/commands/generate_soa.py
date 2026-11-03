@@ -2,7 +2,7 @@ import sys
 
 from django.core.management.base import BaseCommand
 
-from university.core.accounts.models import AcademicYear, Semester
+from university.core.accounts.models import Semester
 from university.core.students.models import Enrollment
 from university.framework.utils import LoadScreen
 from university.payment.services import soa_create
@@ -33,7 +33,7 @@ class Command(BaseCommand):
             soa = soa_create(enrollment=enrollment, discount_auto_apply=True)
             soa.transactions.create(
                 student=enrollment.student,
-                description=f"System Uploaded Payment Transaction",
+                description="System Uploaded Payment Transaction",
                 amount=-abs(soa.total_amount),
             )
 

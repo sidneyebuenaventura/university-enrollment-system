@@ -1,7 +1,6 @@
 import csv
 from decimal import Decimal
 from random import choice
-from typing import Dict
 
 import botocore.exceptions
 from django.contrib.auth import get_user_model
@@ -30,7 +29,6 @@ from university.core.cms.models import (
     RemarkCode,
     Semesters,
 )
-from university.core.cms.selectors import subject_has_class
 from university.core.cms.services import class_grade_state_update
 from university.framework.events import event_publisher
 from university.framework.exceptions import ServiceException
@@ -856,7 +854,7 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
     gwa_sheet.save()
 
 
-def enrollment_grade_process(*, data: Dict) -> tuple:
+def enrollment_grade_process(*, data: dict) -> tuple:
     """Process Enrollment Grade
 
     Args:
@@ -925,7 +923,7 @@ def enrollment_grade_process(*, data: Dict) -> tuple:
 
 
 def student_request_review_history_create(
-    *, user=User, data: Dict
+    *, user=User, data: dict
 ) -> models.StudentRequestReviewHistory:
     return models.StudentRequestReviewHistory.objects.create(user=user, **data)
 
@@ -939,7 +937,7 @@ def _generate_choice_label_mapping(*, choices) -> str:
 
 
 def change_schedule_request_create(
-    *, student: models.Student, data: Dict
+    *, student: models.Student, data: dict
 ) -> models.ChangeScheduleRequest:
     data.pop("type")
     request = models.ChangeScheduleRequest.objects.create(student=student, **data)
@@ -949,7 +947,7 @@ def change_schedule_request_create(
     return request, status
 
 
-def add_subject_request_create(*, student: models.Student, data: Dict) -> tuple:
+def add_subject_request_create(*, student: models.Student, data: dict) -> tuple:
     data.pop("type")
     request = models.AddSubjectRequest.objects.create(student=student, **data)
     status = _generate_choice_label_mapping(
@@ -958,7 +956,7 @@ def add_subject_request_create(*, student: models.Student, data: Dict) -> tuple:
     return request, status
 
 
-def open_class_request_create(*, student: models.Student, data: Dict) -> tuple:
+def open_class_request_create(*, student: models.Student, data: dict) -> tuple:
     data.pop("type")
     request = models.OpenClassRequest.objects.create(student=student, **data)
     status = _generate_choice_label_mapping(
@@ -967,7 +965,7 @@ def open_class_request_create(*, student: models.Student, data: Dict) -> tuple:
     return request, status
 
 
-def withdrawal_request_create(*, student: models.Student, data: Dict) -> tuple:
+def withdrawal_request_create(*, student: models.Student, data: dict) -> tuple:
     category = models.WithdrawalRequest.Categories.PARTIAL_WITHDRAWAL
     if data.pop("type") == models.StudentRequestTypes.FULL_WITHDRAWAL:
         category = models.WithdrawalRequest.Categories.FULL_WITHDRAWAL
@@ -981,7 +979,7 @@ def withdrawal_request_create(*, student: models.Student, data: Dict) -> tuple:
     return request, status
 
 
-def student_request_create(*, student: models.Student, data: Dict) -> Dict:
+def student_request_create(*, student: models.Student, data: dict) -> dict:
     request_create_method_mapping = {
         models.StudentRequestTypes.CHANGE_SCHEDULE.value: change_schedule_request_create,
         models.StudentRequestTypes.ADD_SUBJECT.value: add_subject_request_create,
@@ -1003,7 +1001,7 @@ def student_request_create(*, student: models.Student, data: Dict) -> Dict:
 
 
 def change_schedule_request_update(
-    *, request: models.ChangeScheduleRequest, user: User, data: Dict
+    *, request: models.ChangeScheduleRequest, user: User, data: dict
 ) -> models.ChangeScheduleRequest:
     _data = data.copy()
     remarks = _data.pop("remarks")
@@ -1030,7 +1028,7 @@ def change_schedule_request_update(
 
 
 def add_subject_request_update(
-    *, request: models.AddSubjectRequest, user: User, data: Dict
+    *, request: models.AddSubjectRequest, user: User, data: dict
 ) -> models.AddSubjectRequest:
     _data = data.copy()
     remarks = _data.pop("remarks")
@@ -1057,7 +1055,7 @@ def add_subject_request_update(
 
 
 def open_class_request_update(
-    *, request: models.OpenClassRequest, user: User, data: Dict
+    *, request: models.OpenClassRequest, user: User, data: dict
 ) -> models.OpenClassRequest:
     _data = data.copy()
     remarks = _data.pop("remarks")
@@ -1103,7 +1101,7 @@ def open_class_request_update(
 
 
 def withdrawal_request_update(
-    *, request: models.WithdrawalRequest, user: User, data: Dict
+    *, request: models.WithdrawalRequest, user: User, data: dict
 ) -> models.WithdrawalRequest:
     _data = data.copy()
     remarks = _data.pop("remarks")
