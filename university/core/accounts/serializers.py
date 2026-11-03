@@ -10,7 +10,10 @@ from django.db.models import Q
 from rest_framework import exceptions, serializers
 from rest_framework.validators import UniqueValidator
 
-from university.framework.serializers import DryRunModelSerializer, inline_serializer_class
+from university.framework.serializers import (
+    DryRunModelSerializer,
+    inline_serializer_class,
+)
 
 from . import models, selectors, services
 
@@ -132,7 +135,7 @@ class StaffCreateSerializer(DryRunModelSerializer):
 
     def validate(self, data):
         if data["password1"] != data["password2"]:
-            raise serializers.ValidationError(("The two password fields didn't match."))
+            raise serializers.ValidationError("The two password fields didn't match.")
         return data
 
 

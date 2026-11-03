@@ -22,7 +22,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Building data upload... ")
+            sys.stdout.write("Building data upload... ")
 
             created_counter = 0
             updated_counter = 0
@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 else:
                     updated_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {created_counter+updated_counter} BUILDING DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {created_counter + updated_counter} BUILDING DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {created_counter} records.", "created"

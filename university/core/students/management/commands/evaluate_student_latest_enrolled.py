@@ -1,13 +1,10 @@
 import sys
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
-from university.core.accounts.models import AcademicYear
-from university.core.cms.models import Semesters
 from university.core.students.models import Student
 from university.core.students.selectors import enrollment_get_latest_enrolled
 from university.framework.utils import LoadScreen
-from university.core.students.services import enrollment_status_evaluate
 
 load_screen = LoadScreen()
 
@@ -20,7 +17,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         spinner = load_screen.spinning_cursor()
 
-        sys.stdout.write(f"Student Latest Enrollment evaluation... ")
+        sys.stdout.write("Student Latest Enrollment evaluation... ")
 
         updated_counter = 0
         no_enrollment_counter = 0
@@ -39,7 +36,7 @@ class Command(BaseCommand):
             else:
                 no_enrollment_counter += 1
 
-        message = f"\nSUCCESSFULLY PROCESSED {updated_counter+no_enrollment_counter} STUDENT DATA.\n"
+        message = f"\nSUCCESSFULLY PROCESSED {updated_counter + no_enrollment_counter} STUDENT DATA.\n"
         load_screen.print_statement(message, None)
         load_screen.print_statement(f"Updated: {updated_counter} records.", "updated")
         load_screen.print_statement(

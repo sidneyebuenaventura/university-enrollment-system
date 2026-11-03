@@ -20,7 +20,6 @@ from university.core.cms.models import (
     Room,
     Subject,
 )
-from university.core.maintenance.models import EnrollmentSchedule, ModuleConfiguration
 from university.core.students.models import (
     AddSubjectRequest,
     ChangeScheduleRequest,

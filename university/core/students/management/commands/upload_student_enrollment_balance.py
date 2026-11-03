@@ -36,8 +36,7 @@ class Command(BaseCommand):
             total_counter = 0
             invalid_enrollment_counter = 0
 
-            spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Enrollment Outstanding Balance data upload... \n")
+            sys.stdout.write("Enrollment Outstanding Balance data upload... \n")
 
             for row in reader:
                 total_counter += 1
@@ -66,7 +65,7 @@ class Command(BaseCommand):
                 if total_amount_paid > 0:
                     soa.transactions.create(
                         student=student,
-                        description=f"System Uploaded Payment Transaction",
+                        description="System Uploaded Payment Transaction",
                         amount=-abs(total_amount_paid),
                     )
 

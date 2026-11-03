@@ -4,7 +4,11 @@ from django.contrib.auth import get_user_model
 from rest_framework import exceptions
 
 from university.core.accounts.selectors import current_semester_get, next_semester_get
-from university.core.cms.models import Class, Course, CurriculumPeriod, CurriculumSubject
+from university.core.cms.models import (
+    Class,
+    Course,
+    CurriculumSubject,
+)
 from university.core.cms.selectors import class_tuition_fee_get, subject_has_class
 from university.payment.models import BukasTransaction, StatementOfAccount
 

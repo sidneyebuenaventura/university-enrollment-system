@@ -4,13 +4,23 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers as rest_serializers
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import (
+    CreateAPIView,
+    ListAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ModelSerializer
 from rest_framework.viewsets import ModelViewSet
 
 from config.settings.openapi import Tags
 from university.core.accounts.filters import SchoolFilter, SchoolFilterSet
-from university.core.accounts.models import AcademicYear, Department, Personnel, Semester
+from university.core.accounts.models import (
+    AcademicYear,
+    Department,
+    Personnel,
+    Semester,
+)
 from university.core.accounts.selectors import current_semester_get, user_schools_get
 from university.framework.pagination import PageNumberPagination
 from university.framework.permissions import IsAdminUser
@@ -19,11 +29,6 @@ from university.framework.views import (
     ListRetrieveViewSet,
     PermissionRequiredMixin,
     ViewSetSerializerClassMixin,
-)
-from rest_framework.generics import (
-    ListAPIView,
-    RetrieveUpdateDestroyAPIView,
-    CreateAPIView,
 )
 
 from . import models, serializers, services

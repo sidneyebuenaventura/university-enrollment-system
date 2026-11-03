@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 from university.core.accounts.models import AcademicYear, Module, School, Semester
-from university.core.cms.models import Course, Semesters
+from university.core.cms.models import Course
 from university.core.students.models import Student
 from university.framework.models import BaseModel, TextChoiceField
 

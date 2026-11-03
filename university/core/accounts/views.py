@@ -19,9 +19,9 @@ from university.framework.events import EventObject, event_publisher
 from university.framework.pagination import PageNumberPagination
 from university.framework.permissions import (
     IsAdminUser,
+    IsAdminUserNPC,
     IsNewAdminUser,
     IsNewStudentUser,
-    IsAdminUserNPC,
     IsStudentUserNPC,
     IsSuperUserNPC,
 )
@@ -249,10 +249,6 @@ class StaffViewSet(
         #     old_target=data_before_update,
         # )
         # event.publish()
-
-    def perform_partial_update(self, serializer):
-        user = services.staff_update(user=user, data=serializer.validated_data)
-        serializer.instance = user
 
     def perform_destroy(self, instance):
         services.staff_delete(user=instance)

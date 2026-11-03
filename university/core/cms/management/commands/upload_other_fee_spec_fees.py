@@ -4,7 +4,7 @@ import sys
 
 from django.core.management.base import BaseCommand
 
-from university.core.cms.models import OtherFeeSpecification, Fee
+from university.core.cms.models import Fee, OtherFeeSpecification
 from university.framework.utils import LoadScreen
 
 load_screen = LoadScreen()
@@ -21,7 +21,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Other Fee Specification Fees data upload... \n")
+            sys.stdout.write("Other Fee Specification Fees data upload... \n")
 
             created_counter = 0
             already_existing_counter = 0
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 fee_specification.save()
                 created_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {created_counter+already_existing_counter+invalid_counter} OTHER FEE SPECIFICATION  FEES DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {created_counter + already_existing_counter + invalid_counter} OTHER FEE SPECIFICATION  FEES DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {created_counter} records.", "created"

@@ -1,12 +1,11 @@
 from decimal import Decimal
-from typing import Union
 
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 from rest_framework import serializers
 
-from university.core.accounts.models import AcademicYear, Personnel, School, Semester
+from university.core.accounts.models import AcademicYear, School, Semester
 from university.core.accounts.selectors import current_semester_get, next_semester_get
 from university.core.cms.models import (
     Building,
@@ -179,20 +178,6 @@ class ClassGradeSerializer(serializers.ModelSerializer):
             "final_status",
             "remarks",
         )
-
-
-class StudentGradeScheduleRetrieveSubSerializer(serializers.ModelSerializer):
-    grades = serializers.SerializerMethodField()
-    subject_class = ClassSerializer()
-
-    class Meta:
-        model = models.EnrolledClass
-        fields = "__all__"
-
-    def get_grade(self, obj):
-        if hasattr(obj, "grades"):
-            return ClassGradeSerializer(obj.grades).data
-        return None
 
 
 class StudentRetrieveSerializer(serializers.ModelSerializer):
@@ -515,7 +500,7 @@ class EnrollmentCurriculumSubjectListSerializer(serializers.ModelSerializer):
         model = CurriculumSubject
         fields = ("subject", "is_completed")
 
-    def get_is_completed(self, obj) -> Union[bool, None]:
+    def get_is_completed(self, obj) -> bool | None:
         enrollment = self.context.get("enrollment")
         if not enrollment:
             return None
@@ -531,9 +516,9 @@ class EnrollmentCurriculumPeriodListSerializer(serializers.ModelSerializer):
         model = CurriculumPeriod
         fields = ("semester", "year_level", "curriculum_subjects")
 
-    def get_curriculum_subjects(
-        self, obj
-    ) -> EnrollmentCurriculumSubjectListSerializer(many=True):
+    def get_curriculum_subjects(self, obj) -> EnrollmentCurriculumSubjectListSerializer(
+        many=True
+    ):
         return EnrollmentCurriculumSubjectListSerializer(
             obj.subjects.all(), many=True, context=self.context
         ).data
@@ -578,15 +563,6 @@ class EnrollmentSubjectScheduleRetrieveSubSerializer(serializers.ModelSerializer
 
     def get_student(self, obj) -> models.Student:
         return StudentListSerializer(obj.enrollment.student).data
-
-
-class StudentGradeScheduleRetrieveSubSerializer(serializers.ModelSerializer):
-    grades = ClassGradeSerializer()
-    klass = ClassSerializer()
-
-    class Meta:
-        model = models.EnrolledClass
-        fields = "__all__"
 
 
 class EnrollmentRemarkUpdateSerializer(serializers.Serializer):
@@ -1359,7 +1335,7 @@ class ChangeRequestRequestListSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1399,7 +1375,7 @@ class ChangeRequestRequestRetrieveSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1420,7 +1396,7 @@ class AddSubjectRequestListSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1460,7 +1436,7 @@ class AddSubjectRequestRetrieveSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1481,7 +1457,7 @@ class OpenClassRequestListSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1521,7 +1497,7 @@ class OpenClassRequestRetrieveSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
     def get_review_histories(self, obj) -> ReviewHistorySerializer(many=True):
@@ -1555,7 +1531,7 @@ class WithdrawalRequestListSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
 
@@ -1595,7 +1571,7 @@ class WithdrawalRequestRetrieveSerializer(serializers.ModelSerializer):
     def get_school(self, obj) -> str:
         try:
             return obj.student.course.school.name
-        except:
+        except AttributeError:
             return None
 
     def get_review_histories(self, obj) -> ReviewHistorySerializer(many=True):

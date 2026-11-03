@@ -1,5 +1,4 @@
 from decimal import Decimal
-from pickle import TRUE
 from random import randint
 
 from django.contrib.auth import get_user_model
@@ -7,10 +6,9 @@ from django.db.models import Sum
 from django.utils import timezone
 from rest_framework import exceptions
 
-from university.core.accounts.models import School, Semester, AcademicYear
+from university.core.accounts.models import School, Semester
 from university.core.students.selectors import (
     enrollment_get_for_payment,
-    enrollment_get_latest,
 )
 
 from .models import (
@@ -33,7 +31,7 @@ def soa_get_for_payment(*, user: User, raise_exception: bool = False):
         soa = enrollment.statement_of_account
     except StatementOfAccount.DoesNotExist:
         if raise_exception:
-            raise exceptions.NotFound("No Statement of Account for payment.")
+            raise exceptions.NotFound("No Statement of Account for payment.") from None
         else:
             return None
 
@@ -53,7 +51,7 @@ def soa_get_latest(*, user: User, raise_exception: bool = False):
         )
     except StatementOfAccount.DoesNotExist:
         if raise_exception:
-            raise exceptions.NotFound("No Statement of Acccount found.")
+            raise exceptions.NotFound("No Statement of Acccount found.") from None
         else:
             return None
 

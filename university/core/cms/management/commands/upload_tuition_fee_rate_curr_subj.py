@@ -53,7 +53,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             self.spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Curriculum Subject Tuition Fee Category data upload... ")
+            sys.stdout.write("Curriculum Subject Tuition Fee Category data upload... ")
 
             fields = ["id", "ref_id"]
             tf_categories = TuitionFeeCategory.objects.only(*fields).values(*fields)

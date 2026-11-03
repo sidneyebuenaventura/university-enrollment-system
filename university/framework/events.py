@@ -1,5 +1,4 @@
 import importlib
-from typing import Union
 
 import structlog
 from django.conf import settings
@@ -60,10 +59,10 @@ class Event:
         self.data = data or {}
         self.data.update(kwargs)
 
-        if not "timestamp" in self.data:
+        if "timestamp" not in self.data:
             self.data["timestamp"] = timezone.now()
 
-        if not "type" in self.data:
+        if "type" not in self.data:
             self.data["type"] = "event"
 
         self.timestamp = self.data["timestamp"]
@@ -100,7 +99,9 @@ class Event:
 
     def publish(self):
         # Find event bus instance
-        service_events = importlib.import_module(f"university.{self.service_name}.events")
+        service_events = importlib.import_module(
+            f"university.{self.service_name}.events"
+        )
         service_events.bus.publish(self)
 
     def to_dict(self):
@@ -172,7 +173,7 @@ class GenericEvent(Event):
 
 
 class GenericModelEvent(Event):
-    def __init__(self, name: str, object: Union[Model, EventObject], **kwargs):
+    def __init__(self, name: str, object: Model | EventObject, **kwargs):
         if isinstance(object, Model):
             object = EventObject(object)
 
@@ -195,8 +196,8 @@ class CreateDeleteEventMixin:
     def __init__(
         self,
         name: str,
-        actor: Union[Model, EventObject] = None,
-        target: Union[Model, EventObject] = None,
+        actor: Model | EventObject = None,
+        target: Model | EventObject = None,
         **kwargs,
     ):
         if isinstance(actor, Model):
@@ -256,9 +257,9 @@ class UpdateModelEvent(Event):
     def __init__(
         self,
         name: str,
-        actor: Union[Model, EventObject] = None,
-        old_target: Union[Model, EventObject] = None,
-        new_target: Union[Model, EventObject] = None,
+        actor: Model | EventObject = None,
+        old_target: Model | EventObject = None,
+        new_target: Model | EventObject = None,
         **kwargs,
     ):
         if isinstance(actor, Model):

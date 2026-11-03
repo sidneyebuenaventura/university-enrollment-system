@@ -27,7 +27,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Curriculum Period data upload... ")
+            sys.stdout.write("Curriculum Period data upload... ")
 
             created_counter = 0
             invalid_counter = 0
@@ -55,7 +55,7 @@ class Command(BaseCommand):
                     print(f"Invalid Curriculum Code: {row.get('CURR_CD')}")
                     invalid_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {created_counter+invalid_counter+existing_counter} CURRICULUM PERIOD DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {created_counter + invalid_counter + existing_counter} CURRICULUM PERIOD DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {created_counter} records.", "created"

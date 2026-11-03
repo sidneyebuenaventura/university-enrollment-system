@@ -1,4 +1,3 @@
-from platform import platform
 from django.core.management.base import BaseCommand
 
 from university.core.accounts.constants import ReservedRole
