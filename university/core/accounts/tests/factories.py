@@ -45,6 +45,7 @@ class StaffUserFactory(DjangoModelFactory):
 
     class Meta:
         model = get_user_model()
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def password_histories(self, create, extracted, **kwargs):
@@ -100,6 +101,7 @@ class StaffFactory(StaffUserFactory):
 class RoleFactory(DjangoModelFactory):
     class Meta:
         model = models.Role
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def role_modules(self, create, extracted, **kwargs):

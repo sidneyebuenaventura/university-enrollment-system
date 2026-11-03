@@ -173,6 +173,7 @@ class BuildingFactory(DjangoModelFactory):
 
     class Meta:
         model = models.Building
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def schools(self, create, extracted, **kwargs):
@@ -254,6 +255,7 @@ class FeeSpecificationFactory(DjangoModelFactory):
 
     class Meta:
         model = models.FeeSpecification
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def fees(self, create, extracted, **kwargs):
@@ -306,6 +308,7 @@ class DiscountFactory(DjangoModelFactory):
 
     class Meta:
         model = models.Discount
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def fee_exemptions(self, create, extracted, **kwargs):

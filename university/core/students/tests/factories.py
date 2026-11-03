@@ -86,6 +86,7 @@ class StudentFactory(DjangoModelFactory):
 
     class Meta:
         model = models.Student
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def password_histories(self, create, extracted, **kwargs):
