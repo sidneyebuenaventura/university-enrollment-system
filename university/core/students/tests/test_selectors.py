@@ -6,7 +6,11 @@ from rest_framework import exceptions
 from university.core.accounts.tests.factories import AcademicYearFactory
 from university.core.cms.tests.factories import ClassFactory, SubjectFactory
 from university.core.students import selectors
-from university.core.students.models import Enrollment, GradeStatuses
+from university.core.students.models import (
+    Enrollment,
+    EnrollmentGrade,
+    GradeStatuses,
+)
 from university.core.students.tests.factories import (
     EnrolledClassFactory,
     EnrollmentFactory,
@@ -111,3 +115,17 @@ class TestGradedUnits:
         assert is_completed(passed)
         assert not is_completed(failed)
         assert not is_completed(ungraded)
+
+
+@pytest.mark.django_db
+class TestEnrollmentBlocks:
+    def test_has_failed_subject(self, student, enrollment_grade_factory):
+        enrollment = EnrollmentFactory(student=student, status=ENROLLED)
+        assert not selectors.student_has_failed_subject_get(student=student)
+
+        enrollment_grade_factory(
+            enrollment=enrollment,
+            grading_status=EnrollmentGrade.GradingStatuses.FAILED,
+        )
+        enrollment.refresh_from_db()
+        assert selectors.student_has_failed_subject_get(student=student)

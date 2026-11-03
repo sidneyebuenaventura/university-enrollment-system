@@ -12,7 +12,13 @@ from university.core.cms.models import (
 from university.core.cms.selectors import class_tuition_fee_get, subject_has_class
 from university.payment.models import BukasTransaction, StatementOfAccount
 
-from .models import EnrolledClass, EnrolledClassGrade, Enrollment, Student
+from .models import (
+    EnrolledClass,
+    EnrolledClassGrade,
+    Enrollment,
+    EnrollmentGrade,
+    Student,
+)
 
 User = get_user_model()
 
@@ -219,8 +225,9 @@ def enrollment_bukas_transaction_get(*, soa: StatementOfAccount) -> BukasTransac
 
 def student_has_failed_subject_get(*, student: Student) -> bool:
     latest_enrollment = enrollment_get_latest_enrolled(user=student.user)
-    if hasattr(latest_enrollment, "grading_status"):
-        return latest_enrollment.grading_status == Enrollment.GradingStatuses.FAILED
+    if hasattr(latest_enrollment, "grade"):
+        grading_status = latest_enrollment.grade.grading_status
+        return grading_status == EnrollmentGrade.GradingStatuses.FAILED
     return False
 
 
