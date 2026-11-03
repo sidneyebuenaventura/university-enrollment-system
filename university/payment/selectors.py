@@ -93,16 +93,13 @@ def soa_get_min_amount_due(*, soa: StatementOfAccount) -> Decimal:
 def soa_get_remaining_balance(*, soa: StatementOfAccount) -> Decimal:
     result = soa.transactions.aggregate(sum=Sum("amount"))
     balance = result.get("sum") or Decimal(0)
-    soa.has_remaining_balance = False
+    has_remaining_balance = balance > 0
 
-    if balance >= 0:
-        if balance > 0:
-            soa.has_remaining_balance = True
-            soa.save()
+    if soa.has_remaining_balance != has_remaining_balance:
+        soa.has_remaining_balance = has_remaining_balance
+        soa.save()
 
-        return balance
-
-    return Decimal(0)
+    return max(balance, Decimal(0))
 
 
 def soa_get_available_credits(*, soa: StatementOfAccount) -> Decimal:

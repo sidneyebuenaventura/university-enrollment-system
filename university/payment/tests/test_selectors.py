@@ -104,6 +104,20 @@ class TestSoaBalance:
         assert selectors.soa_get_remaining_balance(soa=soa) == Decimal("6000.00")
         assert selectors.soa_get_available_credits(soa=soa) == Decimal(0)
 
+    def test_remaining_balance_updates_flag(
+        self, statement_of_account, account_transaction_factory
+    ):
+        soa = statement_of_account
+        account_transaction_factory(soa=soa, amount=Decimal("10000.00"))
+        selectors.soa_get_remaining_balance(soa=soa)
+        soa.refresh_from_db()
+        assert soa.has_remaining_balance
+
+        account_transaction_factory(soa=soa, amount=Decimal("-10000.00"))
+        selectors.soa_get_remaining_balance(soa=soa)
+        soa.refresh_from_db()
+        assert not soa.has_remaining_balance
+
     def test_overpayment_becomes_credit(
         self, statement_of_account, account_transaction_factory
     ):
