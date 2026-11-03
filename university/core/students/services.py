@@ -913,9 +913,7 @@ def enrollment_grade_process(*, data: dict) -> tuple:
         data.get("gwa") if data.get("gwa") != "NO GWA" else Decimal(0)
     )
     enrollment.grade.grading_status = grading_status_mapping.get(data.get("status"))
-    enrollment.grade.pass_percentage = grading_status_mapping.get(
-        data.get("pass_percentage")
-    )
+    enrollment.grade.pass_percentage = data.get("pass_percentage") or None
     enrollment.grade.remark_code = remark_code
     enrollment.grade.save()
 

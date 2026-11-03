@@ -450,6 +450,7 @@ class TestGwaSheetProcess:
 
         enrollment.refresh_from_db()
         assert enrollment.grade.general_weighted_average == Decimal("88.5")
+        assert enrollment.grade.pass_percentage == 100
         assert enrollment.grade.grading_status == EnrollmentGrade.GradingStatuses.PASSED
 
     def test_accepts_unix_line_endings(self, enrollment):
