@@ -6,7 +6,14 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from university.core.accounts.models import AcademicYear, Personnel, Semester
-from university.core.cms.models import Class, ClassSchedule, Room, Semesters, Subject, Course
+from university.core.cms.models import (
+    Class,
+    ClassSchedule,
+    Room,
+    Semesters,
+    Subject,
+    Course,
+)
 from university.framework.utils import LoadScreen
 
 load_screen = LoadScreen()

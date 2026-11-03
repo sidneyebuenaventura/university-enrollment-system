@@ -111,7 +111,7 @@ class Command(BaseCommand):
                 id_code = row.get("ID_CD")
                 username = f"{id_code}{emp_id}"
                 if len(emp_id) < 4:
-                    username = f"{id_code}{'0'*(4-len(emp_id))}{emp_id}"
+                    username = f"{id_code}{'0' * (4 - len(emp_id))}{emp_id}"
 
                 user, created = User.objects.update_or_create(
                     username=username,
@@ -134,7 +134,7 @@ class Command(BaseCommand):
                 else:
                     updated_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {created_counter+updated_counter+invalid_counter} PERSONNEL DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {created_counter + updated_counter + invalid_counter} PERSONNEL DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {created_counter} records.", "created"

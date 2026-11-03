@@ -78,7 +78,7 @@ class Command(BaseCommand):
                 else:
                     self.updated_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {self.created_counter+self.updated_counter} MISCELLANEOUS FEE SPECIFICATION DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {self.created_counter + self.updated_counter} MISCELLANEOUS FEE SPECIFICATION DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {self.created_counter} records.", "created"

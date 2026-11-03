@@ -41,7 +41,7 @@ class Command(BaseCommand):
                 else:
                     updated_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {created_counter+updated_counter} SCHOOL DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {created_counter + updated_counter} SCHOOL DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {created_counter} records.", "created"

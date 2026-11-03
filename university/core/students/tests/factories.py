@@ -11,7 +11,11 @@ from university.core.accounts.tests.factories import (
     SemesterFactory,
     UserFactory,
 )
-from university.core.cms.tests.factories import ClassFactory, CourseFactory, CurriculumFactory
+from university.core.cms.tests.factories import (
+    ClassFactory,
+    CourseFactory,
+    CurriculumFactory,
+)
 from university.core.students import models
 from university.framework.tests import fake, fake_amount
 

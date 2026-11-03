@@ -14,7 +14,10 @@ from sentry_sdk import capture_exception
 from university.core import events
 from university.core.accounts.constants import ReservedRole
 from university.core.accounts.models import AcademicYear, Personnel, Role
-from university.core.accounts.selectors import current_academic_year_get, next_semester_get
+from university.core.accounts.selectors import (
+    current_academic_year_get,
+    next_semester_get,
+)
 from university.core.accounts.services import user_role_remove
 from university.core.cms.models import (
     Class,
@@ -114,7 +117,9 @@ def enrollment_step_1_information(*, enrollment: models.Enrollment, data: dict):
     student = enrollment.student
     student.phone_no = data.get("contact_number", student.phone_no)
     student.user.email = data.get("institutional_email", student.user.email)
-    student.institutional_email = data.get("institutional_email", student.institutional_email)
+    student.institutional_email = data.get(
+        "institutional_email", student.institutional_email
+    )
     student.email = data.get("personal_email", student.email)
     student.father_name = data.get("father_name", student.father_name)
     student.father_occupation = data.get("father_occupation", student.father_occupation)
@@ -569,9 +574,7 @@ def enrollment_status_evaluate(*, enrollment: models.Enrollment):
     ]
 
     if has_failed and has_balance:
-        status = (
-            models.EnrollmentStatus.BlockStatuses.BLOCKED_WITH_OUTSTANDING_AND_FAILED_GRADE
-        )
+        status = models.EnrollmentStatus.BlockStatuses.BLOCKED_WITH_OUTSTANDING_AND_FAILED_GRADE
     elif has_failed:
         status = models.EnrollmentStatus.BlockStatuses.BLOCKED_WITH_FAILED_SUBJECT
     elif has_balance:
@@ -710,12 +713,12 @@ def grade_sheet_process(*, grade_sheet: models.GradeSheet):
             ):
                 data["tentative_final_grade"] = cells[9].value or None
             else:
-                data[
-                    "tentative_final_grade"
-                ] = enrolled_class_grade.tentative_final_grade
-                data[
-                    "tentative_final_grade_state"
-                ] = enrolled_class_grade.tentative_final_grade_state
+                data["tentative_final_grade"] = (
+                    enrolled_class_grade.tentative_final_grade
+                )
+                data["tentative_final_grade_state"] = (
+                    enrolled_class_grade.tentative_final_grade_state
+                )
 
             if (
                 enrolled_class_grade.final_grade_state

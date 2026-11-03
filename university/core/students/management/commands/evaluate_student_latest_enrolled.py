@@ -39,7 +39,7 @@ class Command(BaseCommand):
             else:
                 no_enrollment_counter += 1
 
-        message = f"\nSUCCESSFULLY PROCESSED {updated_counter+no_enrollment_counter} STUDENT DATA.\n"
+        message = f"\nSUCCESSFULLY PROCESSED {updated_counter + no_enrollment_counter} STUDENT DATA.\n"
         load_screen.print_statement(message, None)
         load_screen.print_statement(f"Updated: {updated_counter} records.", "updated")
         load_screen.print_statement(

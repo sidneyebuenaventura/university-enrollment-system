@@ -537,7 +537,6 @@ class PaymentCountPerSchoolSerializer(serializers.ModelSerializer):
 
 
 class OverTheCounterStatusPerSchoolSerializer(serializers.ModelSerializer):
-
     over_the_counter_count = serializers.SerializerMethodField()
     paid_over_the_counter_count = serializers.SerializerMethodField()
 
@@ -592,7 +591,6 @@ class OverTheCounterStatusPerSchoolSerializer(serializers.ModelSerializer):
 
 
 class PaymentStatusPerSchoolSerializer(serializers.ModelSerializer):
-
     remaining_balance = serializers.SerializerMethodField()
     fully_paid = serializers.SerializerMethodField()
 
@@ -637,7 +635,6 @@ class PaymentStatusPerSchoolSerializer(serializers.ModelSerializer):
 
 
 class RevenuePerMethodPerSchoolYearSerializer(serializers.ModelSerializer):
-
     bukas_revenue = serializers.SerializerMethodField()
     dragonpay_revenue = serializers.SerializerMethodField()
     cashier_revenue = serializers.SerializerMethodField()

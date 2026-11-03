@@ -364,8 +364,6 @@ class OpenClassPerSchoolSerializer(serializers.ModelSerializer):
         # TODO: Custom filterclass for year_level
         if year_level and year_level.isnumeric():
             classes = classes.filter(year_level=year_level)
-            
-        
 
         return classes.count()
 
@@ -390,11 +388,9 @@ class OpenClassEnrolleePerCourseSerializer(serializers.ModelSerializer):
         # TODO: Custom filterclass for year_level
         if year_level and year_level.isnumeric():
             classes = classes.filter(year_level=year_level)
-            
+
         if school:
-            classes = classes.filter(
-                course__school = school
-            )
+            classes = classes.filter(course__school=school)
 
         return classes.count()
 
@@ -410,11 +406,9 @@ class OpenClassEnrolleePerCourseSerializer(serializers.ModelSerializer):
         # TODO: Custom filterclass for year_level
         if year_level and year_level.isnumeric():
             enrollments = enrollments.filter(year_level=year_level)
-        
+
         if school:
-            enrollments = enrollments.filter(
-                sstudent__course__school = school
-            )
+            enrollments = enrollments.filter(sstudent__course__school=school)
 
         return enrollments.count()
 
@@ -500,4 +494,3 @@ class ClassGradeStatePerSchoolSerializer(serializers.ModelSerializer):
         return classes.filter(
             grade_states__final_grade_state=models.ClassGradeState.States.SUBMITTED
         ).count()
-

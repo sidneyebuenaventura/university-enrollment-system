@@ -97,7 +97,7 @@ class Command(BaseCommand):
                 else:
                     updated_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {invalid_counter+updated_counter+created_counter} CURRICULUM SUBJECT DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {invalid_counter + updated_counter + created_counter} CURRICULUM SUBJECT DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {created_counter} records.", "created"

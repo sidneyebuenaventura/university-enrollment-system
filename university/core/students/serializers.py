@@ -531,9 +531,9 @@ class EnrollmentCurriculumPeriodListSerializer(serializers.ModelSerializer):
         model = CurriculumPeriod
         fields = ("semester", "year_level", "curriculum_subjects")
 
-    def get_curriculum_subjects(
-        self, obj
-    ) -> EnrollmentCurriculumSubjectListSerializer(many=True):
+    def get_curriculum_subjects(self, obj) -> EnrollmentCurriculumSubjectListSerializer(
+        many=True
+    ):
         return EnrollmentCurriculumSubjectListSerializer(
             obj.subjects.all(), many=True, context=self.context
         ).data

@@ -277,7 +277,9 @@ class TestSchoolViewSet:
 
     @apply_perms("core_accounts.view_school", client="staff_api_client")
     def test_schools_retrieve(self, staff_api_client, school):
-        url = reverse("university.core.accounts:schools-detail", kwargs={"pk": school.id})
+        url = reverse(
+            "university.core.accounts:schools-detail", kwargs={"pk": school.id}
+        )
         response = staff_api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.data.get("name") == school.name
@@ -322,7 +324,9 @@ class TestFacultyViewSet:
         client="staff_api_client",
     )
     def test_faculty_retrieve(self, staff_api_client, faculty):
-        url = reverse("university.core.accounts:faculty-detail", kwargs={"pk": faculty.id})
+        url = reverse(
+            "university.core.accounts:faculty-detail", kwargs={"pk": faculty.id}
+        )
         response = staff_api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK

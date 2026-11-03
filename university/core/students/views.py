@@ -867,10 +867,11 @@ class StudentEnrollmentSubjectListAPIView(InlineSerializerMixin, ListAPIView):
         context["passed_curr_subj_ids"] = passed_curr_subj_ids
         return context
 
+
 @extend_schema(tags=[Tags.DASHBOARDS])
 class OverallTotalEnrolleesListAPIView(GenericAPIView):
     """Overall Total Enrollees for the Current Semester"""
-    
+
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
@@ -878,9 +879,9 @@ class OverallTotalEnrolleesListAPIView(GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         total_enrollees = selectors.overall_total_enrollees(
-            year_level = request.GET.get("year_level", None),
+            year_level=request.GET.get("year_level", None),
         )
         return Response(
             {"overall_total_enrollees": total_enrollees},
-            status = status.HTTP_202_ACCEPTED,
+            status=status.HTTP_202_ACCEPTED,
         )

@@ -50,7 +50,7 @@ class Command(BaseCommand):
                     print(err)
                     invalid_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {updated_counter+invalid_counter} ENROLLMENT DISCOUNT DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {updated_counter + invalid_counter} ENROLLMENT DISCOUNT DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Updated: {updated_counter} records.", "updated"

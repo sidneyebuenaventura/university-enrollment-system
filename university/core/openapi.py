@@ -30,7 +30,10 @@ class WebLoginViewExtension(OpenApiViewExtension):
     target_class = "university.core.accounts.views.WebLoginView"
 
     def view_replacement(self):
-        from university.core.accounts.serializers import TokenSerializer, UserDetailsSerializer
+        from university.core.accounts.serializers import (
+            TokenSerializer,
+            UserDetailsSerializer,
+        )
 
         @extend_schema_serializer()
         class WebTokenSerializer(TokenSerializer):
@@ -169,7 +172,9 @@ class StudentEnrollmentLatestAPIViewExtension(OpenApiViewExtension):
 class StudentEnrollmentRetrieveUpdateAPIViewExtension(
     StudentEnrollmentLatestAPIViewExtension
 ):
-    target_class = "university.core.students.views.StudentEnrollmentRetrieveUpdateAPIView"
+    target_class = (
+        "university.core.students.views.StudentEnrollmentRetrieveUpdateAPIView"
+    )
 
 
 class FacultyDetailSerializerExtension(OpenApiSerializerExtension):

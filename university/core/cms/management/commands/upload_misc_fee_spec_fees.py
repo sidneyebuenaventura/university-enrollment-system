@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 fee_specification.save()
                 created_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {created_counter+already_existing_counter+invalid_counter} MISCELLANEOUS FEE SPECIFICATION  FEES DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {created_counter + already_existing_counter + invalid_counter} MISCELLANEOUS FEE SPECIFICATION  FEES DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {created_counter} records.", "created"

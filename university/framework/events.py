@@ -100,7 +100,9 @@ class Event:
 
     def publish(self):
         # Find event bus instance
-        service_events = importlib.import_module(f"university.{self.service_name}.events")
+        service_events = importlib.import_module(
+            f"university.{self.service_name}.events"
+        )
         service_events.bus.publish(self)
 
     def to_dict(self):

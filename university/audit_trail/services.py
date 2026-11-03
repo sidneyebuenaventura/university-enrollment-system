@@ -2,7 +2,11 @@ from typing import Union
 
 from django.db import transaction
 
-from university.framework.events import CreateModelEvent, DeleteModelEvent, UpdateModelEvent
+from university.framework.events import (
+    CreateModelEvent,
+    DeleteModelEvent,
+    UpdateModelEvent,
+)
 
 from . import selectors
 from .models import TrailLog

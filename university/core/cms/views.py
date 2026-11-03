@@ -10,7 +10,12 @@ from rest_framework.viewsets import ModelViewSet
 
 from config.settings.openapi import Tags
 from university.core.accounts.filters import SchoolFilter, SchoolFilterSet
-from university.core.accounts.models import AcademicYear, Department, Personnel, Semester
+from university.core.accounts.models import (
+    AcademicYear,
+    Department,
+    Personnel,
+    Semester,
+)
 from university.core.accounts.selectors import current_semester_get, user_schools_get
 from university.framework.pagination import PageNumberPagination
 from university.framework.permissions import IsAdminUser

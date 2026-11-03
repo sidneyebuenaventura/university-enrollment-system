@@ -30,7 +30,7 @@ def choices_help_text(choices_cls):
 
 
 def format_currency(amount):
-    return f"\u20B1{Decimal(amount):,.2f}"
+    return f"\u20b1{Decimal(amount):,.2f}"
 
 
 class LoadScreen:

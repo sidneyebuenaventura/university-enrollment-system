@@ -94,7 +94,9 @@ class TestStudentListRetrieveAPIView:
         assert len(response.data["results"]) == len(students)
 
     def test_students_retrieve(self, staff_api_client, student):
-        url = reverse("university.core.students:students-detail", kwargs={"pk": student.pk})
+        url = reverse(
+            "university.core.students:students-detail", kwargs={"pk": student.pk}
+        )
         response = staff_api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
 

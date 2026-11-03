@@ -115,7 +115,9 @@ class AdminRoleManager(GroupManager):
         return (
             super()
             .get_queryset()
-            .filter(~Q(name__startswith=f"{settings.UNIVERSITY_CORE_RESERVED_ROLE_PREFIX}."))
+            .filter(
+                ~Q(name__startswith=f"{settings.UNIVERSITY_CORE_RESERVED_ROLE_PREFIX}.")
+            )
         )
 
 
