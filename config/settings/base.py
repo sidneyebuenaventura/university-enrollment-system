@@ -2,10 +2,10 @@
 Django settings for the University Enrollment System.
 
 For more information on this file, see
-https://docs.djangoproject.com/en/3.2/topics/settings/
+https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/3.2/ref/settings/
+https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from datetime import timedelta
@@ -26,14 +26,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env(
     SECRET_KEY=(str, "devkey"),
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, "*"),
+    ALLOWED_HOSTS=(list, ["*"]),
     ENABLE_SILK=(bool, False),
 )
 
 env.read_env(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
@@ -70,10 +70,6 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "dj_rest_auth",
-    "dj_rest_auth.registration",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
     "django_extensions",
     "django_js_reverse",
     "django_filters",
@@ -145,7 +141,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
     "default": env.db("DATABASE_URL", default=None),
@@ -153,13 +149,13 @@ DATABASES = {
 
 
 # Custom User model
-# https://docs.djangoproject.com/en/3.2/topics/auth/customizing/#substituting-a-custom-user-model
+# https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#substituting-a-custom-user-model
 
 AUTH_USER_MODEL = "core_accounts.User"
 
 
 # Password validation
-# https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -178,7 +174,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/3.2/topics/i18n/
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
 
@@ -186,27 +182,33 @@ TIME_ZONE = "Asia/Manila"
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 
-# django-storages
+# Storages
+# https://docs.djangoproject.com/en/5.2/ref/settings/#storages
 # https://django-storages.readthedocs.io/en/latest/index.html
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 STORAGE_PROVIDER = env("STORAGE_PROVIDER", default="system")
 
 
 if STORAGE_PROVIDER.lower() == "system":
-    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
-
     MEDIA_URL = "media/"
 
     MEDIA_ROOT = BASE_DIR / "mediafiles"
 
 
 if STORAGE_PROVIDER.lower() == "s3":
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STORAGES["default"] = {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"}
 
     AWS_S3_ACCESS_KEY_ID = env("AWS_S3_ACCESS_KEY_ID", default=None)
 
@@ -222,7 +224,7 @@ if STORAGE_PROVIDER.lower() == "s3":
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = env("STATIC_URL", default="static/")
 
@@ -237,17 +239,15 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Logging
-# https://docs.djangoproject.com/en/3.2/topics/logging/#configuring-logging
+# https://docs.djangoproject.com/en/5.2/topics/logging/#configuring-logging
 
 LOG_LEVEL = "INFO"
 
@@ -350,14 +350,12 @@ REST_FRAMEWORK = {
 # dj-rest-auth
 # https://dj-rest-auth.readthedocs.io/en/latest/index.html
 
-REST_AUTH_SERIALIZERS = {
+REST_AUTH = {
     "TOKEN_SERIALIZER": "university.core.accounts.serializers.TokenSerializer",
     "PASSWORD_CHANGE_SERIALIZER": "university.core.accounts.serializers.PasswordChangeSerializer",
+    "OLD_PASSWORD_FIELD_ENABLED": True,
+    "LOGOUT_ON_PASSWORD_CHANGE": True,
 }
-
-OLD_PASSWORD_FIELD_ENABLED = True
-
-LOGOUT_ON_PASSWORD_CHANGE = True
 
 
 # Django JS Reverse
@@ -479,6 +477,7 @@ EVENT_MAP = {
 
 structlog.configure(
     processors=[
+        structlog.contextvars.merge_contextvars,
         structlog.stdlib.filter_by_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.stdlib.add_logger_name,
@@ -489,7 +488,6 @@ structlog.configure(
         structlog.processors.UnicodeDecoder(),
         structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
     ],
-    context_class=structlog.threadlocal.wrap_dict(dict),
     logger_factory=structlog.stdlib.LoggerFactory(),
     wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,

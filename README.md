@@ -4,48 +4,43 @@
 
 # University Enrollment System
 
-A backend for a university's admin and student portals. It covers the full
-student lifecycle: curriculum management, enrollment, fees and billing, online
-payments, grading, and student requests. It's built as a set of Django services
-that communicate through RabbitMQ events.
+Backend for a university's admin portal and student portal. Handles curriculum
+and class setup, enrollment, fees and payments, grades, and student requests.
+It runs as a few Django services that talk to each other through RabbitMQ.
 
 ## Features
 
-- **Accounts & access control:** users, roles, and module-level permissions
-  for admin staff; schools, departments, personnel, academic years, and semesters.
-- **Academic catalog:** courses, curricula, subjects with prerequisites,
-  classes and schedules, buildings and rooms.
-- **Enrollment:** enrollment windows, a step-by-step enrollment flow, discounts,
-  and enrollment status tracking.
-- **Grades:** per-class grade sheets, grade states, and general weighted average (GWA).
-- **Student requests:** change schedule, add subject, open class, and withdrawal,
-  each with a review and approval history.
-- **Billing & payments:** fee specifications, statements of account, and
-  pluggable payment providers (Dragonpay, Bukas, over-the-counter, cashier).
-- **Notifications:** templated emails triggered by enrollment, payment, and
-  request events.
-- **Audit trail:** an event-sourced activity log for every create, update, and
-  delete.
+- Users, roles and module permissions for admin staff
+- Schools, departments, personnel, academic years and semesters
+- Courses, curricula, subjects and prerequisites, classes, schedules and rooms
+- Enrollment with schedules, discounts and status tracking
+- Grade sheets and GWA computation
+- Student requests (change schedule, add subject, open class, withdrawal) with
+  a review flow
+- Statements of account and online payments through Dragonpay and Bukas, plus
+  over-the-counter and cashier payments
+- Email notifications for enrollment, payment and request updates
+- Audit trail of create/update/delete events
 
 ## Architecture
 
-The system is one codebase that runs as several services:
+One codebase, deployed as several services:
 
-| Service | Port | Role |
+| Service | Port | What it does |
 |---|---|---|
-| `core` | 8000 | Main REST API and Django Admin |
-| `payment` | 8001 | Payment API and provider callbacks/webhooks |
-| `core_consumer` | — | Consumes domain events for the core service |
-| `notification` | — | Consumes events and sends emails |
-| `audit_trail` | — | Consumes events and writes audit logs |
-| `worker` / `beat` | — | Celery async and scheduled tasks |
+| `core` | 8000 | Main REST API and Django admin |
+| `payment` | 8001 | Payment API and provider callbacks |
+| `core_consumer` | | Handles events for the core service |
+| `notification` | | Sends emails from events |
+| `audit_trail` | | Writes audit logs from events |
+| `worker`, `beat` | | Celery workers and scheduled tasks |
 
-Supporting infrastructure: PostgreSQL, RabbitMQ (events and the Celery broker),
-and MailHog (local email capture).
+Postgres is the database, RabbitMQ carries both the events and the Celery
+queue, and MailHog catches emails locally.
 
-The code follows the [HackSoft Django Style Guide](https://github.com/HackSoftware/Django-Styleguide):
-business logic lives in `services.py`, read queries live in `selectors.py`,
-and views stay thin.
+The code follows the [HackSoft Django Style Guide](https://github.com/HackSoftware/Django-Styleguide).
+Business logic goes in `services.py`, queries in `selectors.py`, and views
+stay thin.
 
 ```
 university/
@@ -62,8 +57,8 @@ university/
 
 ## Tech stack
 
-Python · Django · Django REST Framework · PostgreSQL · RabbitMQ · Celery ·
-drf-spectacular (OpenAPI) · Docker Compose · pytest
+Python 3.12, Django 5.2, Django REST Framework, PostgreSQL, RabbitMQ, Celery,
+drf-spectacular (OpenAPI), Docker Compose, uv, pytest
 
 ## Getting started
 
@@ -103,8 +98,19 @@ docker compose exec <service> python manage.py <command>
 
 See the [Makefile](Makefile) for more.
 
+### Without Docker
+
+Dependencies are managed with [uv](https://docs.astral.sh/uv/). You still need
+a Postgres database, and RabbitMQ for the event consumers.
+
+```bash
+uv sync
+uv run python manage.py migrate
+uv run pytest
+```
+
 ## Configuration
 
-The institution's name and portal URLs are configured through environment
-variables in `.env`, including `UNIVERSITY_NAME`, `UNIVERSITY_STUDENT_PORTAL_URL`,
-and the `NOTIFICATION_MESSAGE_*` contact details. See [.env.example](.env.example).
+Settings come from environment variables (see [.env.example](.env.example)).
+Set `UNIVERSITY_NAME` and `UNIVERSITY_STUDENT_PORTAL_URL` for your school, and
+the `NOTIFICATION_MESSAGE_*` values for the contact details shown in emails.
