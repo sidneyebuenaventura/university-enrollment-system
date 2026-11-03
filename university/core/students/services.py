@@ -841,7 +841,7 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
 
     except (UnicodeDecodeError, botocore.exceptions.ClientError) as error:
         _gwa_sheet_failed(
-            journal_voucher=gwa_sheet,
+            gwa_sheet=gwa_sheet,
             error="Error reading gwa sheet file",
         )
         capture_exception(error)
