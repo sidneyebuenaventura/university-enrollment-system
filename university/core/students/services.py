@@ -734,13 +734,6 @@ def grade_sheet_process(*, grade_sheet: models.GradeSheet):
                 "final_grade": cells[12].value or None,
             }
 
-        if not enrolled_class_grade or (
-            enrolled_class_grade
-            and enrolled_class_grade.prelim_grade_state
-            in models.EnrolledClassGrade.EDITABLE_GRADE_STATES
-        ):
-            pass
-
         grade_sheet.rows.create(student=student, status=status, **data)
 
     grade_sheet.status = models.GradeSheet.Statuses.COMPLETED
@@ -832,11 +825,10 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
                 "status": row[6],
             }
 
-            result, err = enrollment_grade_process(data=data)
+            result, _ = enrollment_grade_process(data=data)
             if result:
                 stats["success"] += 1
             else:
-                print(err)
                 stats["invalid"] += 1
 
     except (UnicodeDecodeError, botocore.exceptions.ClientError) as error:
