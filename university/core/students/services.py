@@ -809,7 +809,7 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
 
     try:
         file_contents = gwa_sheet.file.read()
-        csv_data = file_contents.decode().split("\r\n")
+        csv_data = file_contents.decode().splitlines()
         reader = csv.reader(csv_data)
 
         for row in reader:

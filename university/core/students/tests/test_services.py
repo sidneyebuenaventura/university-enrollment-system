@@ -452,6 +452,18 @@ class TestGwaSheetProcess:
         assert enrollment.grade.general_weighted_average == Decimal("88.5")
         assert enrollment.grade.grading_status == EnrollmentGrade.GradingStatuses.PASSED
 
+    def test_accepts_unix_line_endings(self, enrollment):
+        sheet = self.make_sheet(
+            f"{enrollment.student.id_number},Student,2041,1,91,100,PASSED,",
+            newline="\n",
+        )
+
+        services.gwa_sheet_process(gwa_sheet=sheet)
+
+        sheet.refresh_from_db()
+        assert sheet.status == GeneralWeightedAverageSheet.Statuses.COMPLETED
+        assert sheet.success == 1
+
     def test_unreadable_file_fails_the_sheet(self):
         sheet = GeneralWeightedAverageSheet.objects.create(
             file=SimpleUploadedFile("gwa.csv", b"\xff\xfe\x00bad")
