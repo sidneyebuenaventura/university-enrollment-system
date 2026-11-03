@@ -129,17 +129,17 @@ def enrollment_curriculum_subject_is_completed(
 ) -> bool:
     enrolled_class = (
         enrollment.enrolled_classes.filter(klass__subject=curriculum_subject.subject)
-        .select_related("grade")
+        .select_related("grades")
         .first()
     )
 
     if not enrolled_class:
         return False
 
-    if not hasattr(enrolled_class, "grade"):
+    if not hasattr(enrolled_class, "grades"):
         return False
 
-    return enrolled_class.grade.status == EnrolledClassGrade.Statuses.PASSED
+    return enrolled_class.grades.status == EnrolledClassGrade.Statuses.PASSED
 
 
 def enrollment_total_units_get(*, enrollment: Enrollment) -> int:
@@ -161,8 +161,8 @@ def student_enrollment_passed_units_get(*, enrollment: Enrollment) -> int:
     units = 0
 
     for enrolled_class in enrolled_classes:
-        if hasattr(enrolled_class, "grade"):
-            if enrolled_class.grade.status == EnrolledClassGrade.Statuses.PASSED:
+        if hasattr(enrolled_class, "grades"):
+            if enrolled_class.grades.status == EnrolledClassGrade.Statuses.PASSED:
                 if enrolled_class.klass.subject:
                     units += enrolled_class.klass.subject.units
 
@@ -174,8 +174,8 @@ def student_enrollment_failed_units_get(*, enrollment: Enrollment) -> int:
     units = 0
 
     for enrolled_class in enrolled_classes:
-        if hasattr(enrolled_class, "grade"):
-            if enrolled_class.grade.status == EnrolledClassGrade.Statuses.FAILED:
+        if hasattr(enrolled_class, "grades"):
+            if enrolled_class.grades.status == EnrolledClassGrade.Statuses.FAILED:
                 if enrolled_class.klass.subject:
                     units += enrolled_class.klass.subject.units
 

@@ -6,7 +6,7 @@ from rest_framework import exceptions
 from university.core.accounts.tests.factories import AcademicYearFactory
 from university.core.cms.tests.factories import ClassFactory, SubjectFactory
 from university.core.students import selectors
-from university.core.students.models import Enrollment
+from university.core.students.models import Enrollment, GradeStatuses
 from university.core.students.tests.factories import (
     EnrolledClassFactory,
     EnrollmentFactory,
@@ -74,3 +74,40 @@ class TestEnrollmentUnits:
     def test_latest_enrolled_total_units_without_enrollment(self, student):
         units = selectors.enrollment_latest_enrolled_total_units_get(user=student.user)
         assert units == 0
+
+
+@pytest.mark.django_db
+class TestGradedUnits:
+    @pytest.fixture
+    def enrollment(self, base_enrollment, enrolled_class_grade_factory):
+        passed = add_class(base_enrollment, 3)
+        failed = add_class(base_enrollment, 2)
+        add_class(base_enrollment, 4)
+        enrolled_class_grade_factory(enrolled_class=passed)
+        enrolled_class_grade_factory(
+            enrolled_class=failed, status=GradeStatuses.FAILED, final_grade=60
+        )
+        return base_enrollment
+
+    def test_passed_units(self, enrollment):
+        assert selectors.student_enrollment_passed_units_get(enrollment=enrollment) == 3
+
+    def test_failed_units(self, enrollment):
+        assert selectors.student_enrollment_failed_units_get(enrollment=enrollment) == 2
+
+    def test_curriculum_subject_is_completed(
+        self, enrollment, curriculum_subject_factory
+    ):
+        passed, failed, ungraded = enrollment.enrolled_classes.order_by("id")
+
+        def is_completed(enrolled_class):
+            curriculum_subject = curriculum_subject_factory(
+                subject=enrolled_class.klass.subject
+            )
+            return selectors.enrollment_curriculum_subject_is_completed(
+                enrollment=enrollment, curriculum_subject=curriculum_subject
+            )
+
+        assert is_completed(passed)
+        assert not is_completed(failed)
+        assert not is_completed(ungraded)
