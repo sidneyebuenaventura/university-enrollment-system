@@ -1,0 +1,60 @@
+{% extends "notification/base.html" %}
+{% load static %}
+{% load dictionary %}
+
+{% block title %}Enrollment Success{% endblock %}
+
+{% block header_bg %}{% static "notification/email_header_success.png" %}{% endblock %}
+
+{% block body %}
+<p>Dear <b>{{ full_name }}</b>,</p>
+
+<p>
+  You have successfully enrolled for <b>{{ semester }}</b> of School Year <b>{{ year }}</b>.
+</p>
+
+<p>Please see below enrolled courses: </p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Subject/Class</th>
+      <th>No. of Units</th>
+      <th>Professor</th>
+      <th>Schedule</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for class in classes %}
+      <tr>
+        <td>{{ class|dict_get:"subject" }}</td>
+        <td>{{ class|dict_get:"units" }}</td>
+        <td>{{ class|dict_get:"faculty" }}</td>
+        <td>
+          {% for schedule in class|dict_get:"schedules" %}
+            {{ schedule }}<br>
+          {% endfor %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p>You will receive your statement of account on a separate email shortly.</p>
+
+<p>
+  For any questions or concerns, you may contact IT Department at
+  <b>
+    {{ app_settings.MESSAGE_IT_DEPARTMENT_EMAIL }}
+    <span> / </span>
+    {{ app_settings.MESSAGE_IT_DEPARTMENT_PHONE }}
+  </b>
+  or Finance at
+  <b>
+    {{ app_settings.MESSAGE_FINANCE_EMAIL }}
+    <span> / </span>
+    {{ app_settings.MESSAGE_FINANCE_PHONE }}</b>.
+</p>
+
+<p>{{ app_settings.UNIVERSITY_NAME }} Admin</p>
+{% endblock %}

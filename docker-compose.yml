@@ -1,0 +1,112 @@
+version: '3.7'
+
+volumes:
+  db-volume:
+  broker-volume:
+
+
+services:
+  db:
+    image: postgres:14.2-alpine
+    container_name: university_db
+    environment:
+      - POSTGRES_DB=university
+      - POSTGRES_USER=university
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - db-volume:/var/lib/postgresql/data/
+    ports:
+      - "5432"
+
+  broker:
+    image: rabbitmq:3.9-management-alpine
+    container_name: university_broker
+    ports:
+      - 8080:15672
+    volumes:
+      - ./infrastructure/broker/local.conf:/etc/rabbitmq/conf.d/local.conf
+      - broker-volume:/var/lib/rabbitmq/
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: university_mailhog
+    ports:
+      - 8025:8025
+
+  base:
+    build: .
+    image: university/base
+    container_name: university_base
+    command: echo 0
+    volumes:
+      - ./:/app/
+
+  worker:
+    extends:
+      service: base
+    container_name: university_worker
+    command: runworker
+    depends_on:
+      - broker
+
+  beat:
+    extends:
+      service: base
+    container_name: university_beat
+    command: runbeat
+    depends_on:
+      - db
+      - broker
+
+  core:
+    extends:
+      service: base
+    container_name: university_core
+    command: rundev
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.core
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+      - broker
+
+  core_consumer:
+    extends:
+      service: base
+    container_name: university_core_consumer
+    command: python manage.py run_core
+    depends_on:
+      - db
+      - broker
+
+  payment:
+    extends:
+      service: base
+    container_name: university_payment
+    command: rundev
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.payment
+    ports:
+      - 8001:8000
+    depends_on:
+      - db
+      - broker
+
+  audit_trail:
+    extends:
+      service: base
+    container_name: university_audit_trail
+    command: python manage.py run_audit_trail
+    depends_on:
+      - db
+      - broker
+
+  notification:
+    extends:
+      service: base
+    container_name: university_notification
+    command: python manage.py run_notification
+    depends_on:
+      - db
+      - broker

@@ -1,0 +1,21 @@
+[tool.pytest.ini_options]
+addopts = "-v"
+testpaths = "university/"
+python_files = "tests.py test_*.py"
+norecursedirs = ".git __pycache__"
+filterwarnings = [
+    "ignore::DeprecationWarning:kombu.*",
+    "ignore::DeprecationWarning:django_js_reverse.*",
+]
+
+[tool.coverage.run]
+include = [
+    "university/*"
+]
+omit = [
+    "*migrations*",
+    "*tests*",
+]
+
+[tool.isort]
+profile = "black"

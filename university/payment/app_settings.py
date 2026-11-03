@@ -1,0 +1,10 @@
+from university.framework.utils import get_config
+
+DRAGONPAY_API = get_config("PAYMENT_DRAGONPAY_API")
+DRAGONPAY_TRANSACTION_CCY = get_config(
+    "PAYMENT_DRAGONPAY_TRANSACTION_CCY", default="PHP"
+)
+DRAGONPAY_TRANSACTION_EMAIL = get_config("PAYMENT_DRAGONPAY_TRANSACTION_EMAIL")
+
+BUKAS_API = get_config("PAYMENT_BUKAS_API")
+BUKAS_API_KEY = get_config("PAYMENT_BUKAS_API_KEY")

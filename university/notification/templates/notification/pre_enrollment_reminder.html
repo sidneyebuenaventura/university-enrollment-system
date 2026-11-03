@@ -1,0 +1,35 @@
+{% extends "notification/base.html" %}
+
+{% block title %}Pre Enrollment Reminder{% endblock %}
+
+{% block body %}
+<p>Dear Students,</p>
+
+<p>
+  Please be informed that the Pre-enrollment schedule shall commence from
+  <b>{{ enrollment_start }}</b>. For those who have outstanding balances, please pay
+  prior to the pre-enrollment to avoid over lapping of payments.
+</p>
+
+<p>
+  You may view your outstanding balance from the Student Portal using this
+  <a href="#" class="link">link</a>.
+</p>
+
+<p>
+  For any questions or concerns, you may contact IT Department at
+  <b>
+    {{ app_settings.MESSAGE_IT_DEPARTMENT_EMAIL }}
+    <span> / </span>
+    {{ app_settings.MESSAGE_IT_DEPARTMENT_PHONE }}
+  </b>
+  or Finance
+  <b>
+    {{ app_settings.MESSAGE_FINANCE_EMAIL }}
+    <span> / </span>
+    {{ app_settings.MESSAGE_FINANCE_PHONE }} </b
+  >.
+</p>
+
+<p>Thank you!<br />{{ app_settings.UNIVERSITY_NAME }} Admin</p>
+{% endblock %}

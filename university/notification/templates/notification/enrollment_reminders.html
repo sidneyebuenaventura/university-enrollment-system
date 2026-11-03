@@ -1,0 +1,49 @@
+{% extends "notification/base.html" %}
+
+{% block title %}Enrollment Reminders{% endblock %}
+
+{% block body %}
+<p>Dear Students,</p>
+<p>
+  Please be infored that the Enrollment schedule shall commence from
+  <b>{{ enrollment_start }}</b>.
+</p>
+<p>
+  Once available, you may proceed with the enrollment using the enrollment
+  portal. Link/ URL for the enrollment portal is:
+</p>
+
+<p>
+  <a href="{{ app_settings.MESSAGE_STUDENT_PORTAL_URL }}" class="link">
+    <b>{{ app_settings.MESSAGE_STUDENT_PORTAL_URL }}</b>
+  </a>
+</p>
+
+<p>
+  For those who have not access the portal before, please make sure you login
+  and change your passwords prior to enrollment
+</p>
+
+<p>
+  For those students who have failed grades, kindly proceed to the guidance
+  office for next steps and actions regarding your enrollment. Students with
+  failed marks will have their enrollment modules disabled.
+</p>
+
+<p>
+  For any questions or concerns, you may contact IT Department at
+  <b>
+    {{ app_settings.MESSAGE_IT_DEPARTMENT_EMAIL }}
+    <span> / </span>
+    {{ app_settings.MESSAGE_IT_DEPARTMENT_PHONE }}
+  </b>
+  or Student affairs at
+  <b>
+    {{ app_settings.MESSAGE_STUDENT_AFFAIRS_EMAIL }}
+    <span> / </span>
+    {{ app_settings.MESSAGE_STUDENT_AFFAIRS_PHONE }} </b
+  >.
+</p>
+
+<p>{{ app_settings.UNIVERSITY_NAME }} Admin</p>
+{% endblock %}

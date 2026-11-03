@@ -1,0 +1,47 @@
+{% extends "notification/base.html" %}
+
+{% block title %}{{ request_type }} Request For Approval{% endblock %}
+
+{% block body %}
+<p>Dear <b>{{ full_name }}</b>,</p>
+
+<p>
+    Your {{ request_description }} is now <b>For Approval</b>.
+    Kindly wait for
+    another email notification containing the status of your request
+</p>
+
+<p>
+    Status: {{ status }}
+    <br>
+    Change withdrawal type from <b>{{ prev_status }}</b> to <b>{{ status }}</b>
+    <br>
+    {{ remarks }}
+</p>
+
+<p>
+    For any questions or concerns, you may contact IT Department at
+    <b>
+        {{ app_settings.MESSAGE_IT_DEPARTMENT_EMAIL }}
+        <span> / </span>
+        {{ app_settings.MESSAGE_IT_DEPARTMENT_PHONE }}
+    </b>
+    or Student affairs at
+    <b>
+        {{ app_settings.MESSAGE_STUDENT_AFFAIRS_EMAIL }}
+        <span> / </span>
+        {{ app_settings.MESSAGE_STUDENT_AFFAIRS_PHONE }} </b>.
+</p>
+<p>{{ app_settings.UNIVERSITY_NAME }} Admin</p>
+<p>
+    <i>
+        <small>
+            Disclaimer: This email and its attachments may be confidential and are intended solely for the
+            addressee/s. If you are not an intended addressee, please notify the sender and delete this
+            email immediately without printing, forwarding, or showing the contents to anyone. The views
+            expressed in this email are those of the individual sender, and are not necessarily the views
+            of {{ app_settings.UNIVERSITY_NAME }}.
+        </small>
+    </i>
+</p>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "notification/base.html" %}
+{% load static %}
+
+{% block title %}Enrollment Statement of Account{% endblock %}
+
+{% block body %}
+<p>Dear <b>{{ full_name }}</b>,</p>
+
+<p>
+  You have successfully enrolled for <b>{{ semester }}</b> of School Year <b>{{ year }}</b>.
+</p>
+
+<p>Please see Summary / Receipt of payment mode:</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Student ID</td>
+      <td>{{ student_id }}</td>
+    </tr>
+    <tr>
+      <td>Total Courses</td>
+      <td>{{ total_classes }}</td>
+    </tr>
+    <tr>
+      <td>Total Paid</td>
+      <td>{{ total_paid }}</td>
+    </tr>
+    <tr>
+      <td>Payment Method</td>
+      <td>{{ payment_method }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  For any questions or concerns, you may contact IT Department at
+  <b>
+    {{ app_settings.MESSAGE_IT_DEPARTMENT_EMAIL }}
+    <span> / </span>
+    {{ app_settings.MESSAGE_IT_DEPARTMENT_PHONE }}
+  </b>
+  or Finance at
+  <b>
+    {{ app_settings.MESSAGE_FINANCE_EMAIL }}
+    <span> / </span>
+    {{ app_settings.MESSAGE_FINANCE_PHONE }}</b>.
+</p>
+
+<p>{{ app_settings.UNIVERSITY_NAME }} Admin</p>
+{% endblock %}
