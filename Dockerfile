@@ -13,7 +13,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock /app/
 RUN uv sync --locked --no-install-project
 
-COPY docker-entrypoint.sh /usr/local/bin
+COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD ["runprod"]
