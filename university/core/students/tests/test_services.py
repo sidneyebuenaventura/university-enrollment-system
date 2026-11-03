@@ -1,8 +1,10 @@
 from decimal import Decimal
+from io import BytesIO
 from unittest import mock
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from openpyxl import Workbook
 from rest_framework import exceptions
 
 from university.core import events
@@ -23,11 +25,14 @@ from university.core.students.models import (
     EnrollmentGrade,
     EnrollmentStatus,
     GeneralWeightedAverageSheet,
+    GradeSheet,
+    GradeStates,
+    GradeStatuses,
     OpenClassRequest,
     StudentRequestTypes,
     WithdrawalRequest,
 )
-from university.core.students.tests.factories import EnrollmentFactory
+from university.core.students.tests.factories import EnrollmentFactory, StudentFactory
 from university.payment.tests.factories import StatementOfAccountFactory
 
 Statuses = Enrollment.Statuses
@@ -513,3 +518,128 @@ class TestGwaSheetProcess:
 
         assert sheet.file_id
         delay.assert_called_once_with(id=sheet.id)
+
+
+GRADE_SHEET_COLUMNS = [
+    "STUDENT NO",
+    "CLASS CODE",
+    "SUBJECT CODE",
+    "SUBJECT NAME",
+    "UNITS",
+    "SCHOOL_YR",
+    "TERM",
+    "PRELIM GRADE",
+    "MIDTERM GRADE",
+    "TENTATIVE FINAL GRADE",
+    "MED_GRD_CD",
+    "MED_STATUS",
+    "GRD_CD",
+    "STATUS",
+]
+
+
+@pytest.mark.django_db
+class TestGradeSheet:
+    @pytest.fixture(autouse=True)
+    def media_root(self, settings, tmp_path):
+        settings.MEDIA_ROOT = tmp_path
+
+    @pytest.fixture
+    def enrolled_class(self, enrolled_class_factory):
+        return enrolled_class_factory()
+
+    def make_sheet(self, klass, rows, header=GRADE_SHEET_COLUMNS):
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.append(header)
+        for row in rows:
+            worksheet.append(row)
+
+        buffer = BytesIO()
+        workbook.save(buffer)
+        return GradeSheet.objects.create(
+            klass=klass,
+            file=SimpleUploadedFile("grades.xlsx", buffer.getvalue()),
+        )
+
+    def grade_row(self, student, prelim, midterm, final, status="Passed"):
+        row = [student.id_number, "", "", "", 3, "", "", prelim, midterm, None]
+        return row + [None, None, final, status]
+
+    def test_process_creates_rows(self, enrolled_class):
+        sheet = self.make_sheet(
+            enrolled_class.klass,
+            [
+                self.grade_row(enrolled_class.student, 85, 88, 90),
+                self.grade_row(StudentFactory.build(), 70, 70, 70),
+            ],
+        )
+
+        services.grade_sheet_process(grade_sheet=sheet)
+
+        sheet.refresh_from_db()
+        assert sheet.status == GradeSheet.Statuses.COMPLETED
+        row = sheet.rows.get()
+        assert row.student == enrolled_class.student
+        assert (row.prelim_grade, row.midterm_grade, row.final_grade) == (85, 88, 90)
+        assert row.status == GradeStatuses.PASSED
+
+    def test_process_keeps_submitted_grades(
+        self, enrolled_class, enrolled_class_grade_factory
+    ):
+        enrolled_class_grade_factory(
+            enrolled_class=enrolled_class,
+            prelim_grade=80,
+            prelim_grade_state=GradeStates.SUBMITTED,
+        )
+        sheet = self.make_sheet(
+            enrolled_class.klass, [self.grade_row(enrolled_class.student, 99, 88, 90)]
+        )
+
+        services.grade_sheet_process(grade_sheet=sheet)
+
+        row = sheet.rows.get()
+        assert row.prelim_grade == 80
+        assert row.prelim_grade_state == GradeStates.SUBMITTED
+        assert row.midterm_grade == 88
+
+    def test_process_rejects_unknown_columns(self, enrolled_class):
+        sheet = self.make_sheet(
+            enrolled_class.klass, [], header=["STUDENT NO", "NICKNAME"]
+        )
+
+        services.grade_sheet_process(grade_sheet=sheet)
+
+        sheet.refresh_from_db()
+        assert sheet.status == GradeSheet.Statuses.FAILED
+        assert sheet.error_message == "Invalid column NICKNAME"
+
+    def test_publish_updates_editable_grades(
+        self, enrolled_class, enrolled_class_grade_factory
+    ):
+        grade = enrolled_class_grade_factory(
+            enrolled_class=enrolled_class,
+            midterm_grade=75,
+            midterm_grade_state=GradeStates.SUBMITTED,
+            final_grade=None,
+        )
+        sheet = self.make_sheet(
+            enrolled_class.klass, [self.grade_row(enrolled_class.student, 85, 88, 90)]
+        )
+        services.grade_sheet_process(grade_sheet=sheet)
+
+        services.grade_sheet_publish(
+            grade_sheet=sheet,
+            state=GradeStates.SUBMITTED,
+            fields=["prelim_grade", "midterm_grade"],
+        )
+
+        grade.refresh_from_db()
+        assert grade.prelim_grade == 85
+        assert grade.prelim_grade_state == GradeStates.SUBMITTED
+        assert grade.midterm_grade == 75
+        assert grade.final_grade is None
+        assert grade.status == GradeStatuses.PASSED
+        assert enrolled_class.klass.grade_states.prelim_grade_state == (
+            GradeStates.SUBMITTED
+        )
