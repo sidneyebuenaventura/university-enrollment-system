@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env(
     SECRET_KEY=(str, "devkey"),
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, "*"),
+    ALLOWED_HOSTS=(list, ["*"]),
     ENABLE_SILK=(bool, False),
 )
 
@@ -182,27 +182,33 @@ TIME_ZONE = "Asia/Manila"
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 
-# django-storages
+# Storages
+# https://docs.djangoproject.com/en/4.2/ref/settings/#storages
 # https://django-storages.readthedocs.io/en/latest/index.html
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 STORAGE_PROVIDER = env("STORAGE_PROVIDER", default="system")
 
 
 if STORAGE_PROVIDER.lower() == "system":
-    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
-
     MEDIA_URL = "media/"
 
     MEDIA_ROOT = BASE_DIR / "mediafiles"
 
 
 if STORAGE_PROVIDER.lower() == "s3":
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STORAGES["default"] = {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"}
 
     AWS_S3_ACCESS_KEY_ID = env("AWS_S3_ACCESS_KEY_ID", default=None)
 
@@ -232,8 +238,6 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 # Default primary key field type
@@ -346,14 +350,12 @@ REST_FRAMEWORK = {
 # dj-rest-auth
 # https://dj-rest-auth.readthedocs.io/en/latest/index.html
 
-REST_AUTH_SERIALIZERS = {
+REST_AUTH = {
     "TOKEN_SERIALIZER": "university.core.accounts.serializers.TokenSerializer",
     "PASSWORD_CHANGE_SERIALIZER": "university.core.accounts.serializers.PasswordChangeSerializer",
+    "OLD_PASSWORD_FIELD_ENABLED": True,
+    "LOGOUT_ON_PASSWORD_CHANGE": True,
 }
-
-OLD_PASSWORD_FIELD_ENABLED = True
-
-LOGOUT_ON_PASSWORD_CHANGE = True
 
 
 # Django JS Reverse
@@ -475,6 +477,7 @@ EVENT_MAP = {
 
 structlog.configure(
     processors=[
+        structlog.contextvars.merge_contextvars,
         structlog.stdlib.filter_by_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.stdlib.add_logger_name,
@@ -485,7 +488,6 @@ structlog.configure(
         structlog.processors.UnicodeDecoder(),
         structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
     ],
-    context_class=structlog.threadlocal.wrap_dict(dict),
     logger_factory=structlog.stdlib.LoggerFactory(),
     wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,
