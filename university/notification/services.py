@@ -159,7 +159,7 @@ def handle_enrollment_enrolled(event: GenericModelEvent):
     classes = []
 
     for enrolled_class in enrollment.enrolled_classes.all():
-        subject = enrolled_class.klass.curriculum_subject.subject
+        subject = enrolled_class.klass.subject
         instructor = enrolled_class.klass.instructor
         faculty = "-"
 

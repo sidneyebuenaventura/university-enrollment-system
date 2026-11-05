@@ -4,6 +4,8 @@ from unittest import mock
 import pytest
 
 from university.core import events
+from university.core.cms.tests.factories import ClassScheduleFactory
+from university.core.students.tests.factories import EnrolledClassFactory
 from university.framework.events import GenericModelEvent
 from university.notification import app_settings, services
 from university.notification.messages import MessageKeys
@@ -150,3 +152,26 @@ def test_every_handler_has_a_matching_event():
     }
 
     assert handlers <= event_names
+
+
+@pytest.mark.django_db
+def test_enrollment_enrolled_lists_classes(base_enrollment):
+    enrolled_class = EnrolledClassFactory(enrollment=base_enrollment)
+    klass = enrolled_class.klass
+    ClassScheduleFactory(klass=klass)
+
+    services.handle_enrollment_enrolled(
+        event=GenericModelEvent(events.ENROLLMENT_ENROLLED, object=base_enrollment)
+    )
+
+    notification = last_notification()
+    assert notification.message_key == MessageKeys.ENROLLMENT_SUCCESS
+    assert list(notification.recipients.all()) == [base_enrollment.student.user]
+    [listed] = notification.context["classes"]
+    assert listed["subject"] == (
+        f"{klass.subject.course_code}: {klass.subject.descriptive_title}"
+    )
+    assert listed["faculty"] == (
+        f"{klass.instructor.first_name} {klass.instructor.last_name}"
+    )
+    assert len(listed["schedules"]) == 1
