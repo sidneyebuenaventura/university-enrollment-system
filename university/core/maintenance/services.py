@@ -6,107 +6,49 @@ from university.core import events
 from university.core.accounts.constants import MobileModule, ReservedRole
 from university.core.accounts.models import Role
 from university.core.maintenance.models import EnrollmentSchedule
-from university.core.students.models import Student
-from university.core.students.selectors import (
-    student_has_failed_subject_get,
-    student_has_remaining_balance_get,
-)
 
 from . import tasks
+from .selectors import enrollment_schedule_students_get
 
 
+def _schedule_users(*, schedule: EnrollmentSchedule):
+    return [
+        student.user for student in enrollment_schedule_students_get(schedule=schedule)
+    ]
+
+
+def _schedule_role_add(*, schedule: EnrollmentSchedule, role_key: str):
+    role = Role.objects.filter(name=role_key).first()
+
+    if role:
+        role.user_set.add(*_schedule_users(schedule=schedule))
+
+
+def _schedule_role_remove(*, schedule: EnrollmentSchedule, role_key: str):
+    role = Role.objects.filter(name=role_key).first()
+
+    if role:
+        role.user_set.remove(*_schedule_users(schedule=schedule))
+
+
+# Blocked students still get access here. Holds for failed subjects or
+# unpaid balances are applied by enrollment_status_evaluate.
 def pre_enrollment_start(*, schedule: EnrollmentSchedule):
-    student_role = Role.objects.filter(name=ReservedRole.STUDENT).first()
-    pre_enrollment_role = Role.objects.filter(
-        name=ReservedRole.STUDENT_PRE_ENROLLMENT
-    ).first()
-
-    if not student_role:
-        return
-
-    student_users = student_role.user_set.filter(
-        status=schedule.student_type,
-        course=schedule.course,
-        course__school=schedule.school,
-        next_curriculum_period__year_level=schedule.year_level,
-    )
-
-    for user in student_users:
-        has_failed_subject = student_has_failed_subject_get(student=user.student)
-        has_remaining_balance = student_has_remaining_balance_get(user=user)
-        if has_failed_subject and has_remaining_balance:
-            user.enrollment_status = (
-                Student.EnrollmentStatuses.BLOCKED_WITH_OUTSTANDING_AND_FAILED_GRADE
-            )
-        elif has_failed_subject:
-            user.enrollment_status = (
-                Student.EnrollmentStatuses.BLOCKED_WITH_FAILED_SUBJECT
-            )
-        elif has_remaining_balance:
-            user.enrollment_status = (
-                Student.EnrollmentStatuses.BLOCKED_WITH_OUTSTANDING_BALANCE
-            )
-        else:
-            user.enrollment_status = Student.EnrollmentStatuses.ALLOWED
-
-        user.save()
-        user.groups.add(pre_enrollment_role)
+    _schedule_role_add(schedule=schedule, role_key=ReservedRole.STUDENT_PRE_ENROLLMENT)
 
 
 def pre_enrollment_end(*, schedule: EnrollmentSchedule):
-    student_role = Role.objects.filter(name=ReservedRole.STUDENT).first()
-    pre_enrollment_role = Role.objects.filter(
-        name=ReservedRole.STUDENT_PRE_ENROLLMENT
-    ).first()
-
-    if not student_role:
-        return
-
-    student_users = student_role.user_set.filter(
-        status=schedule.student_type,
-        course=schedule.course,
-        course__school=schedule.school,
-        next_curriculum_period__year_level=schedule.year_level,
+    _schedule_role_remove(
+        schedule=schedule, role_key=ReservedRole.STUDENT_PRE_ENROLLMENT
     )
-
-    for user in student_users:
-        user.groups.remove(pre_enrollment_role)
 
 
 def enrollment_start(*, schedule: EnrollmentSchedule):
-    student_role = Role.objects.filter(name=ReservedRole.STUDENT).first()
-    enrollment_role = Role.objects.filter(name=ReservedRole.STUDENT_ENROLLMENT).first()
-
-    if not student_role:
-        return
-
-    student_users = student_role.user_set.filter(
-        status=schedule.student_type,
-        course=schedule.course,
-        course__school=schedule.school,
-        current_curriculum_period=schedule.year_level,
-    )
-
-    for user in student_users:
-        user.groups.add(enrollment_role)
+    _schedule_role_add(schedule=schedule, role_key=ReservedRole.STUDENT_ENROLLMENT)
 
 
 def enrollment_end(*, schedule: EnrollmentSchedule):
-    student_role = Role.objects.filter(name=ReservedRole.STUDENT).first()
-    enrollment_role = Role.objects.filter(name=ReservedRole.STUDENT_ENROLLMENT).first()
-
-    if not student_role:
-        return
-
-    student_users = student_role.user_set.filter(
-        status=schedule.student_type,
-        course=schedule.course,
-        course__school=schedule.school,
-        current_curriculum_period=schedule.year_level,
-    )
-
-    for user in student_users:
-        user.groups.remove(enrollment_role)
+    _schedule_role_remove(schedule=schedule, role_key=ReservedRole.STUDENT_ENROLLMENT)
 
 
 def enrollment_upcoming_schedule_watch():
@@ -141,7 +83,7 @@ def enrollment_upcoming_schedule_watch():
             reminded = schedule.events.filter(**event_data).exists()
 
             if reminded:
-                return
+                continue
 
             eta = schedule.start_datetime - reminder_offset
             module_config["task"].apply_async((schedule.id,), eta=eta)
@@ -177,7 +119,7 @@ def enrollment_starting_schedule_watch():
         started = schedule.events.filter(**event_data).exists()
 
         if started:
-            return
+            continue
 
         module_config["task"].apply_async((schedule.id,), eta=schedule.start_datetime)
         schedule.events.create(**event_data)
@@ -212,7 +154,7 @@ def enrollment_ending_schedule_watch():
         ended = schedule.events.filter(**event_data).exists()
 
         if ended:
-            return
+            continue
 
         module_config["task"].apply_async((schedule.id,), eta=schedule.end_datetime)
         schedule.events.create(**event_data)
