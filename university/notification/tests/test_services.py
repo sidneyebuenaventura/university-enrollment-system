@@ -4,9 +4,10 @@ from unittest import mock
 import pytest
 
 from university.core import events
+from university.core.accounts.constants import ReservedRole
 from university.core.cms.tests.factories import ClassScheduleFactory
 from university.core.students.tests.factories import EnrolledClassFactory
-from university.framework.events import GenericModelEvent
+from university.framework.events import GenericEvent, GenericModelEvent
 from university.notification import app_settings, services
 from university.notification.messages import MessageKeys
 from university.notification.models import EmailChannel, Notification
@@ -175,3 +176,45 @@ def test_enrollment_enrolled_lists_classes(base_enrollment):
         f"{klass.instructor.first_name} {klass.instructor.last_name}"
     )
     assert len(listed["schedules"]) == 1
+
+
+@pytest.mark.django_db
+class TestScheduleReminders:
+    @pytest.fixture
+    def students(self, student_factory, role_factory):
+        role = role_factory(name=ReservedRole.STUDENT)
+        first_year = student_factory(year_level=1)
+        second_year = student_factory(year_level=2)
+        for student in (first_year, second_year):
+            student.user.groups.add(role)
+        return first_year, second_year
+
+    @pytest.mark.parametrize(
+        "event_name, message_key",
+        [
+            (events.ENROLLMENT_REMINDER_SENT, MessageKeys.ENROLLMENT_REMINDERS),
+            (events.PRE_ENROLLMENT_REMINDER_SENT, MessageKeys.PRE_ENROLLMENT_REMINDER),
+        ],
+    )
+    def test_only_students_in_the_schedule(
+        self, students, enrollment_schedule_factory, event_name, message_key
+    ):
+        first_year, _ = students
+        schedule = enrollment_schedule_factory(year_level=1)
+        handler = getattr(services, f"handle_{event_name.split('.')[1]}")
+
+        handler(event=GenericEvent(event_name, schedule))
+
+        notification = last_notification()
+        assert notification.message_key == message_key
+        assert list(notification.recipients.all()) == [first_year.user]
+        assert notification.context["enrollment_start"]
+
+    def test_no_matching_students(self, students, enrollment_schedule_factory):
+        schedule = enrollment_schedule_factory(year_level=4)
+
+        services.handle_enrollment_reminder_sent(
+            event=GenericEvent(events.ENROLLMENT_REMINDER_SENT, schedule)
+        )
+
+        assert not Notification.objects.exists()
