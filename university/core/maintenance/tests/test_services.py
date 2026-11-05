@@ -1,6 +1,11 @@
-import pytest
+from datetime import timedelta
+from unittest import mock
 
-from university.core.accounts.constants import ReservedRole
+import pytest
+from django.utils import timezone
+
+from university.core import events
+from university.core.accounts.constants import MobileModule, ReservedRole
 from university.core.maintenance import selectors, services
 from university.core.students.models import Student
 
@@ -113,3 +118,57 @@ class TestScheduleRoles:
         services.enrollment_start(schedule=schedule)
 
         assert not student.user.groups.exists()
+
+
+@pytest.mark.django_db
+class TestScheduleWatchers:
+    """A schedule that was already handled shouldn't stop the others."""
+
+    def test_starting(self, enrollment_schedule_factory):
+        handled = enrollment_schedule_factory()
+        handled.events.create(event=events.ENROLLMENT_STARTED)
+        pending = enrollment_schedule_factory()
+
+        with mock.patch.object(
+            services.tasks.enrollment_start, "apply_async"
+        ) as apply_async:
+            services.enrollment_starting_schedule_watch()
+
+        apply_async.assert_called_once_with((pending.id,), eta=pending.start_datetime)
+        assert pending.events.filter(event=events.ENROLLMENT_STARTED).exists()
+
+    def test_ending(self, enrollment_schedule_factory):
+        now = timezone.now()
+        kwargs = {
+            "config__module__codename": MobileModule.PRE_ENROLLMENT,
+            "start_datetime": now - timedelta(days=7),
+            "end_datetime": now + timedelta(hours=1),
+        }
+        handled = enrollment_schedule_factory(**kwargs)
+        handled.events.create(event=events.PRE_ENROLLMENT_ENDED)
+        pending = enrollment_schedule_factory(**kwargs)
+
+        with mock.patch.object(
+            services.tasks.pre_enrollment_end, "apply_async"
+        ) as apply_async:
+            services.enrollment_ending_schedule_watch()
+
+        apply_async.assert_called_once_with((pending.id,), eta=pending.end_datetime)
+
+    def test_upcoming_reminders(self, enrollment_schedule_factory):
+        handled = enrollment_schedule_factory()
+        for days in (1, 7):
+            handled.events.create(
+                event=events.ENROLLMENT_REMINDER_SENT,
+                tag=timedelta(days=days).total_seconds(),
+            )
+        pending = enrollment_schedule_factory()
+
+        with mock.patch.object(
+            services.tasks.enrollment_reminder_send, "apply_async"
+        ) as apply_async:
+            services.enrollment_upcoming_schedule_watch()
+
+        assert apply_async.call_count == 2
+        assert {call.args[0] for call in apply_async.call_args_list} == {(pending.id,)}
+        assert pending.events.count() == 2

@@ -83,7 +83,7 @@ def enrollment_upcoming_schedule_watch():
             reminded = schedule.events.filter(**event_data).exists()
 
             if reminded:
-                return
+                continue
 
             eta = schedule.start_datetime - reminder_offset
             module_config["task"].apply_async((schedule.id,), eta=eta)
@@ -119,7 +119,7 @@ def enrollment_starting_schedule_watch():
         started = schedule.events.filter(**event_data).exists()
 
         if started:
-            return
+            continue
 
         module_config["task"].apply_async((schedule.id,), eta=schedule.start_datetime)
         schedule.events.create(**event_data)
@@ -154,7 +154,7 @@ def enrollment_ending_schedule_watch():
         ended = schedule.events.filter(**event_data).exists()
 
         if ended:
-            return
+            continue
 
         module_config["task"].apply_async((schedule.id,), eta=schedule.end_datetime)
         schedule.events.create(**event_data)
