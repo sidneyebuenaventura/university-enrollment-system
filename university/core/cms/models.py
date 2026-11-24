@@ -767,7 +767,7 @@ class LaboratoryFee(SoftDeleteModel):
     )
 
     def __str__(self):
-        return f"{self.name} - {self.academic_year}"
+        return f"{self.subject} - {self.academic_year}"
 
 
 class Announcement(SoftDeleteModel):

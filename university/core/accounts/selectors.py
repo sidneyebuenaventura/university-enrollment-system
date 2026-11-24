@@ -133,28 +133,36 @@ def faculty_current_schedule_list_get(faculty: Personnel):
 
 
 def current_academic_year_get() -> AcademicYear:
-    academic_years = AcademicYear.objects.filter(year_start__gte=date.today().year - 1)
+    today = date.today()
+    academic_years = AcademicYear.objects.filter(
+        year_start__gte=today.year - 1
+    ).order_by("year_start")
 
     for year in academic_years:
         if year.date_start and year.date_end:
-            if year.date_start <= date.today() <= year.date_end:
+            if year.date_start <= today <= year.date_end:
                 return year
 
             next_school_year = AcademicYear.objects.filter(
                 year_start=year.year_start + 1
             ).first()
 
-            if next_school_year and next_school_year.date_start > year.date_end:
+            # Between school years, the one that just ended is still current
+            if (
+                next_school_year
+                and next_school_year.date_start
+                and year.date_end < today < next_school_year.date_start
+            ):
                 return year
-    else:
-        return None
+
+    return None
 
 
 def current_semester_get() -> Semester:
     current_academic_year = current_academic_year_get()
 
     if current_academic_year:
-        for semester in current_academic_year.semesters.all():
+        for semester in current_academic_year.semesters.order_by("order"):
             if semester.date_start and semester.date_end:
                 if semester.date_start <= date.today() <= semester.date_end:
                     return semester

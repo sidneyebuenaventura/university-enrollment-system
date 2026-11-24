@@ -72,14 +72,35 @@ cp .env.example .env
 docker compose build
 docker compose up -d
 make migrate
-make init        # default modules, permissions, and roles
+make seed        # demo data, see below
 ```
 
-Create an admin user:
+### Demo data
 
-```bash
-docker compose exec core python manage.py createsuperuser
-```
+`make seed` (or `python manage.py seed_demo`) fills an empty database with a
+small university to click through:
+
+- Two schools with a 4-year curriculum each (Computer Science and
+  Accountancy), faculty, rooms and class schedules
+- Four school years, with the first semester of the current one in progress
+  and enrollment for the second semester open
+- 40 students with grades for past terms, statements of account, and bank and
+  cashier payments. Some still owe money for this semester and some have
+  already enrolled for the next one.
+
+| Account | Username | Password |
+|---|---|---|
+| Admin (also Django admin) | `admin` | `demo1234` |
+| Student, ready to enroll | `student` | `demo1234` |
+
+Dates are based on the day you seed, so the demo always has an open
+enrollment. Pass `--students` to change the number of students, or `--seed`
+for different names and grades. The command refuses to run on a database that
+already has data.
+
+To start from an empty database instead, run `make init` for the default
+modules, permissions and roles, then create an admin user with
+`docker compose exec core python manage.py createsuperuser`.
 
 ### Services
 

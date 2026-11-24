@@ -5,12 +5,14 @@ import pytest
 from django.conf import settings
 from rest_framework import exceptions
 
+from university.core.cms.models import Discount
 from university.core.cms.tests.factories import (
+    DiscountFactory,
     FeeFactory,
     MiscellaneousFeeSpecificationFactory,
     OtherFeeSpecificationFactory,
 )
-from university.core.students.models import Enrollment
+from university.core.students.models import Enrollment, EnrollmentDiscount
 from university.payment import events, services
 from university.payment.models import (
     BukasTransaction,
@@ -298,3 +300,24 @@ class TestSoaCreate:
         services.soa_create(enrollment=enrollment)
 
         assert soa.get_remaining_balance() == Decimal("1250.00")
+
+    def test_applies_validated_discount(self, enrollment):
+        # Fees listed under fee_exemptions are left out of the discount
+        exempted = enrollment.miscellaneous_fee_specification.fees.get(
+            amount=Decimal("500.00")
+        )
+        discount = DiscountFactory(
+            type=Discount.Types.NORMAL,
+            percentage=Decimal("10.00"),
+            fee_exemptions=[exempted],
+        )
+        EnrollmentDiscount.objects.create(
+            enrollment=enrollment, validated_discount=discount
+        )
+
+        soa = services.soa_create(enrollment=enrollment)
+
+        line = soa.lines.get(value__lt=0)
+        assert line.value == Decimal("-125.00")
+        assert soa.total_amount == Decimal("1750.00")
+        assert soa.get_remaining_balance() == Decimal("1625.00")
