@@ -725,13 +725,27 @@ class RevenuePerMethodPerSchoolYearSerializer(serializers.ModelSerializer):
         return otc_transactions or 0
 
 
-class StudentCashierTransactionUpdateApiSerializer(serializers.ModelSerializer):
+class StudentTransactionCancelSerializer(serializers.ModelSerializer):
+    """Students can only cancel a reference they haven't paid yet"""
+
+    def validate_status(self, value):
+        if value != self.Meta.model.Statuses.FAILED:
+            raise serializers.ValidationError("Payments can only be cancelled here.")
+        return value
+
+    def validate(self, data):
+        if self.instance.status != self.Meta.model.Statuses.PENDING:
+            raise serializers.ValidationError("Only pending payments can be cancelled.")
+        return data
+
+
+class StudentCashierTransactionUpdateApiSerializer(StudentTransactionCancelSerializer):
     class Meta:
         model = models.CashierTransaction
         fields = ("status",)
 
 
-class StudentOTCTransactionUpdateApiSerializer(serializers.ModelSerializer):
+class StudentOTCTransactionUpdateApiSerializer(StudentTransactionCancelSerializer):
     class Meta:
         model = models.OverTheCounterTransaction
         fields = ("status",)
