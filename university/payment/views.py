@@ -713,19 +713,31 @@ class RevenuePerMethodPerSchoolYearListAPIView(ListAPIView):
 
 @extend_schema(tags=[Tags.OTC])
 class StudentOTCTransactionUpdateApi(UpdateAPIView):
-    """Student OTC Transaction Update"""
+    """Student OTC Transaction Update
 
-    queryset = models.OverTheCounterTransaction.objects.all()
+    Lets students cancel a pending reference number.
+    """
+
     serializer_class = serializers.StudentOTCTransactionUpdateApiSerializer
     permission_classes = [IsAuthenticated, IsStudentUser]
     lookup_field = "payment_id"
 
+    def get_queryset(self):
+        return models.OverTheCounterTransaction.objects.filter(
+            soa__user=self.request.user
+        )
+
 
 @extend_schema(tags=[Tags.CASHIER])
 class StudentCashierTransactionUpdateApi(UpdateAPIView):
-    """Student Cashier Transaction Update"""
+    """Student Cashier Transaction Update
 
-    queryset = models.CashierTransaction.objects.all()
+    Lets students cancel a pending reference number.
+    """
+
     serializer_class = serializers.StudentCashierTransactionUpdateApiSerializer
     permission_classes = [IsAuthenticated, IsStudentUser]
     lookup_field = "payment_id"
+
+    def get_queryset(self):
+        return models.CashierTransaction.objects.filter(soa__user=self.request.user)
