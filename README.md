@@ -119,6 +119,24 @@ the git hooks so it runs on every commit:
 uv run pre-commit install
 ```
 
+### Production image
+
+The default Docker build target is the production image. It has the code
+and collected static files baked in, runs as a non-root user, and starts
+gunicorn on `$PORT` (8000 if unset). Docker Compose uses the `dev` target
+instead, which mounts the code and runs the dev server.
+
+```bash
+docker build -t university .
+docker run university migrate                      # run before each release
+docker run -p 8000:8000 university                 # core API
+docker run university runworker                    # Celery worker
+docker run university python manage.py run_core    # event consumers, same for the others
+```
+
+Settings are passed as environment variables. The image doesn't include
+`.env`.
+
 ## Configuration
 
 Settings come from environment variables (see [.env.example](.env.example)).

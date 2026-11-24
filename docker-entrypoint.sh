@@ -8,7 +8,8 @@ if [ "$1" = "rundev" ]; then
 fi
 
 if [ "$1" = "runprod" ]; then
-  gunicorn config.wsgi -b 0.0.0.0:8000 -k gevent -w 2 --timeout 120 --access-logfile - --error-logfile -
+  exec gunicorn config.wsgi -b "0.0.0.0:${PORT:-8000}" -k gevent -w "${WEB_CONCURRENCY:-2}" \
+    --timeout 120 --access-logfile - --error-logfile -
   exit 0
 fi
 
