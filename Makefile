@@ -39,12 +39,8 @@ superuser:
 superuser_role:
 	$(DJANGO_MANAGE) initialize_superuser_role
 
-student:
-	$(DJANGO_MANAGE) initialize_test_student_user
-
-test_students:
-	$(DJANGO_MANAGE) initialize_test_student_user teststudent02 Jane Doe jdoe@example.com TEST20220002
-	$(DJANGO_MANAGE) initialize_test_student_user teststudent03 Mark Valdez mvaldez@example.com TEST20220003
+seed:
+	$(DJANGO_MANAGE) seed_demo
 
 modules:
 	$(DJANGO_MANAGE) initialize_modules
