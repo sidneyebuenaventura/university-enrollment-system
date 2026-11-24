@@ -164,7 +164,24 @@ Settings come from environment variables (see [.env.example](.env.example)).
 Set `UNIVERSITY_NAME` and `UNIVERSITY_STUDENT_PORTAL_URL` for your school, and
 the `NOTIFICATION_MESSAGE_*` values for the contact details shown in emails.
 
-Students pay by bank transfer or in cash at the cashier. The Dragonpay and
-Bukas integrations are still in the code but turned off. To turn them back
-on, add `DP` or `B` to `UNIVERSITY_PAYMENT_METHODS` and set the
-`PAYMENT_DRAGONPAY_*` or `PAYMENT_BUKAS_*` values.
+### Payments
+
+Students pay by fund transfer or in cash at the cashier.
+
+- **Fund transfer:** the student picks a bank and gets a reference number
+  with the university's account details. After transferring, they submit the
+  bank's reference number, the amount, the date and a photo or PDF of the
+  receipt. Finance validates it within `UNIVERSITY_PAYMENT_VALIDATION_DAYS`
+  (2 by default), and transfers past that are flagged as overdue. Validating
+  credits the payment and completes enrollment once the minimum is paid.
+  Rejecting emails the student the reason so they can submit again. Bank
+  files uploaded as journal vouchers still settle transfers in bulk.
+- **Cash:** the student gets a reference number and the cashier tags it as
+  paid.
+
+Set the receiving accounts with `UNIVERSITY_PAYMENT_BANK_ACCOUNTS`. Banks
+without an account can't be picked.
+
+The Dragonpay and Bukas integrations are still in the code but turned off.
+To turn them back on, add `DP` or `B` to `UNIVERSITY_PAYMENT_METHODS` and set
+the `PAYMENT_DRAGONPAY_*` or `PAYMENT_BUKAS_*` values.
