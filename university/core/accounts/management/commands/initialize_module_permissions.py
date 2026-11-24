@@ -32,6 +32,7 @@ from university.payment.models import (
     BukasTransaction,
     CashierTransaction,
     DragonpayTransaction,
+    OverTheCounterTransaction,
     PaymentTransaction,
 )
 
@@ -116,7 +117,7 @@ class Command(BaseCommand):
             {
                 "codename": "web.bank_transactions",
                 "permissions": [
-                    (CashierTransaction, ["view"]),
+                    (OverTheCounterTransaction, ["view", "change"]),
                 ],
             },
             {

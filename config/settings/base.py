@@ -465,6 +465,21 @@ UNIVERSITY_PAYMENT_TRANSACTION_TTL = timedelta(
     minutes=env.int("UNIVERSITY_PAYMENT_TRANSACTION_TTL", default=2880)
 )
 
+# How long finance takes to validate a fund transfer. Older ones are flagged.
+UNIVERSITY_PAYMENT_VALIDATION_TIME = timedelta(
+    days=env.int("UNIVERSITY_PAYMENT_VALIDATION_DAYS", default=2)
+)
+
+# Accounts students send fund transfers to, as BANK=account number pairs.
+# Banks without an account can't be picked.
+UNIVERSITY_PAYMENT_BANK_ACCOUNT_NAME = env(
+    "UNIVERSITY_PAYMENT_BANK_ACCOUNT_NAME", default=UNIVERSITY_NAME
+)
+UNIVERSITY_PAYMENT_BANK_ACCOUNTS = env.dict(
+    "UNIVERSITY_PAYMENT_BANK_ACCOUNTS",
+    default={"BDO": "0012-3456-7890", "MBTC": "123-4-56789012-3"},
+)
+
 EMAIL_WHITELIST = env.list("EMAIL_WHITELIST", default=[])
 
 EVENT_BROKER_URL = env("EVENT_BROKER_URL", default=None)

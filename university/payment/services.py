@@ -213,7 +213,112 @@ def otc_transaction_create(*, soa: StatementOfAccount, data: dict):
         eta = timezone.now() + settings.UNIVERSITY_PAYMENT_TRANSACTION_TTL
         tasks.async_payment_transaction_expire.apply_async((transaction.id,), eta=eta)
 
-    return {"reference_number": transaction.hashed_id, "bank": data.get("bank")}
+    validation_time = settings.UNIVERSITY_PAYMENT_VALIDATION_TIME
+
+    return {
+        "reference_number": transaction.hashed_id,
+        "bank": transaction.bank,
+        "account_name": settings.UNIVERSITY_PAYMENT_BANK_ACCOUNT_NAME,
+        "account_number": settings.UNIVERSITY_PAYMENT_BANK_ACCOUNTS.get(
+            transaction.bank
+        ),
+        "validation_days": validation_time.days,
+    }
+
+
+def otc_transaction_submit(
+    *,
+    transaction: OverTheCounterTransaction,
+    transfer_reference: str,
+    transfer_date,
+    amount: Decimal,
+    receipt: File,
+) -> OverTheCounterTransaction:
+    if transaction.status != OverTheCounterTransaction.Statuses.PENDING:
+        raise exceptions.ValidationError(
+            "This payment was already submitted or is no longer open."
+        )
+
+    transaction.transfer_reference = transfer_reference
+    transaction.transfer_date = transfer_date
+    transaction.amount = amount
+    transaction.receipt = receipt
+    transaction.submitted_at = timezone.now()
+    transaction.status = OverTheCounterTransaction.Statuses.FOR_VALIDATION
+    transaction.save()
+    return transaction
+
+
+def _otc_transaction_settle(
+    *,
+    transaction: OverTheCounterTransaction,
+    amount: Decimal,
+    description: str,
+    jv_number: str = "",
+):
+    with db_transaction.atomic():
+        transaction.status = OverTheCounterTransaction.Statuses.SETTLED
+        transaction.amount = abs(amount)
+        transaction.jv_number = jv_number
+        transaction.settled_at = timezone.now()
+        transaction.save()
+
+        AccountTransaction.objects.get_or_create(
+            soa=transaction.soa,
+            ref_id=transaction.id,
+            defaults={
+                "student": transaction.soa.enrollment.student,
+                "amount": -abs(amount),
+                "description": description,
+                "jv_number": jv_number,
+                "ref": transaction,
+            },
+        )
+
+    event_publisher.generic(events.PAYMENT_SUCCESS, object=transaction)
+    event_publisher.generic(events.PAYMENT_SETTLED, object=transaction)
+
+
+def _otc_transaction_check_for_validation(transaction: OverTheCounterTransaction):
+    if transaction.status != OverTheCounterTransaction.Statuses.FOR_VALIDATION:
+        raise exceptions.ValidationError("This payment isn't waiting for validation.")
+
+
+def otc_transaction_validate(
+    *,
+    transaction: OverTheCounterTransaction,
+    staff: User,
+    amount: Decimal = None,
+) -> OverTheCounterTransaction:
+    """Credits a fund transfer once finance has found it in the bank.
+
+    Pass the amount when what arrived differs from what the student entered.
+    """
+    _otc_transaction_check_for_validation(transaction)
+
+    transaction.validated_at = timezone.now()
+    transaction.validated_by = staff
+    _otc_transaction_settle(
+        transaction=transaction,
+        amount=amount or transaction.amount,
+        description=f"Fund transfer {transaction.bank} {transaction.transfer_reference}",
+    )
+    return transaction
+
+
+def otc_transaction_reject(
+    *, transaction: OverTheCounterTransaction, staff: User, remarks: str
+) -> OverTheCounterTransaction:
+    _otc_transaction_check_for_validation(transaction)
+
+    transaction.status = OverTheCounterTransaction.Statuses.REJECTED
+    transaction.remarks = remarks
+    transaction.validated_at = timezone.now()
+    transaction.validated_by = staff
+    transaction.save()
+
+    event_publisher.generic(events.PAYMENT_REJECTED, object=transaction)
+    return transaction
 
 
 def cashier_transaction_create(*, soa: StatementOfAccount, data: dict):
@@ -450,38 +555,29 @@ def _journal_voucher_bank_process(
     jv_number: str,
     bank: OverTheCounterTransaction.Banks,
 ):
-    transaction = OverTheCounterTransaction.objects.filter(
-        soa__user__student=student,
-        bank=bank,
-        status=OverTheCounterTransaction.Statuses.PENDING,
-    ).first()
+    # Transfers waiting for validation are matched first
+    statuses = OverTheCounterTransaction.Statuses
+    transaction = (
+        OverTheCounterTransaction.objects.filter(
+            soa__user__student=student,
+            bank=bank,
+            status__in=[statuses.FOR_VALIDATION, statuses.PENDING],
+        )
+        .order_by("-status", "id")
+        .first()
+    )
 
     if not transaction:
         soa = soa_get_latest(user=student.user)
         transaction = OverTheCounterTransaction.objects.create(soa=soa, bank=bank)
         transaction.generate_id()
 
-    with db_transaction.atomic():
-        transaction.status = OverTheCounterTransaction.Statuses.SETTLED
-        transaction.amount = abs(amount)
-        transaction.jv_number = jv_number
-        transaction.settled_at = timezone.now()
-        transaction.save()
-
-        AccountTransaction.objects.get_or_create(
-            soa=transaction.soa,
-            ref_id=transaction.id,
-            defaults={
-                "student": transaction.soa.enrollment.student,
-                "amount": -abs(amount),
-                "description": f"OTC Payment {description}",
-                "jv_number": jv_number,
-                "ref": transaction,
-            },
-        )
-
-    event_publisher.generic(events.PAYMENT_SUCCESS, object=transaction)
-    event_publisher.generic(events.PAYMENT_SETTLED, object=transaction)
+    _otc_transaction_settle(
+        transaction=transaction,
+        amount=amount,
+        description=f"OTC Payment {description}",
+        jv_number=jv_number,
+    )
     return "success"
 
 

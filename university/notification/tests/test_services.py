@@ -133,7 +133,7 @@ class TestPaymentSettled:
         )
 
         assert last_notification().context["payment_method"] == (
-            f"Bank - {transaction.bank}"
+            f"Fund Transfer - {transaction.bank}"
         )
 
 
