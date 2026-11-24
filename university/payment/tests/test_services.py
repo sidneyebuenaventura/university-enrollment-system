@@ -258,6 +258,25 @@ class TestPaymentCreate:
         assert isinstance(transaction, CashierTransaction)
         assert result == {"reference_number": transaction.payment_id}
 
+    def test_online_payments_are_off_by_default(self, statement_of_account):
+        with pytest.raises(exceptions.ValidationError):
+            services.payment_create(
+                user=statement_of_account.user,
+                data={"payment_method": PaymentMethods.BUKAS},
+            )
+
+        assert not statement_of_account.payments.exists()
+
+    def test_enabled_methods_come_from_settings(self, settings, statement_of_account):
+        settings.UNIVERSITY_PAYMENT_METHODS = [PaymentMethods.BUKAS]
+
+        services.payment_create(
+            user=statement_of_account.user,
+            data={"payment_method": PaymentMethods.BUKAS},
+        )
+
+        assert isinstance(statement_of_account.payments.get(), BukasTransaction)
+
     def test_student_without_soa(self, student):
         with pytest.raises(exceptions.NotFound):
             services.payment_create(

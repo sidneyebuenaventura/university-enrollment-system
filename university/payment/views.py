@@ -87,6 +87,27 @@ class StudentSOAListAPIView(ListAPIView):
         return models.StatementOfAccount.objects.filter(user=self.request.user)
 
 
+class PaymentMethodListApi(APIView):
+    """Payment Method List
+
+    Payment methods students can use right now.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    class OutputSerializer(drf_serializers.Serializer):
+        value = drf_serializers.CharField()
+        label = drf_serializers.CharField()
+
+    @extend_schema(responses=OutputSerializer(many=True))
+    def get(self, request):
+        methods = [
+            {"value": method.value, "label": method.label}
+            for method in selectors.payment_methods_get()
+        ]
+        return Response(self.OutputSerializer(methods, many=True).data)
+
+
 class PaymentCreateAPIVew(APIView):
     """Payment Create"""
 

@@ -455,6 +455,12 @@ UNIVERSITY_PAYMENT_SERVICE = env(
     "UNIVERSITY_PAYMENT_SERVICE", default="http://localhost:8001"
 )
 
+# Payment methods students can pick. Dragonpay (DP) and Bukas (B) stay off
+# until an online payment provider is set up.
+UNIVERSITY_PAYMENT_METHODS = env.list(
+    "UNIVERSITY_PAYMENT_METHODS", default=["OTC", "C"]
+)
+
 UNIVERSITY_PAYMENT_TRANSACTION_TTL = timedelta(
     minutes=env.int("UNIVERSITY_PAYMENT_TRANSACTION_TTL", default=2880)
 )

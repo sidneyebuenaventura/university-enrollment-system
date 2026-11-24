@@ -260,6 +260,11 @@ def cashier_transaction_void(
 
 
 def payment_create(*, user: User, data: dict):
+    if data.get("payment_method") not in settings.UNIVERSITY_PAYMENT_METHODS:
+        raise exceptions.ValidationError(
+            {"payment_method": "This payment method isn't available."}
+        )
+
     soa = soa_get_latest(user=user, raise_exception=True)
 
     methods = {

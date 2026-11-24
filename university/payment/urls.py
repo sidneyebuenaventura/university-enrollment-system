@@ -31,6 +31,11 @@ urlpatterns = [
         name="payments-create",
     ),
     path(
+        "payments/methods/",
+        views.PaymentMethodListApi.as_view(),
+        name="payment-methods-list",
+    ),
+    path(
         "settlements/",
         views.PaymentSettlementApi.as_view(),
         name="payment-settlements-list",
