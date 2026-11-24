@@ -27,6 +27,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     services:
       postgres:
@@ -81,7 +83,28 @@ jobs:
           uv run python manage.py makemigrations --check --dry-run
 
       - name: Run tests
-        run: uv run pytest --cov --cov-report=term
+        run: uv run pytest --cov --cov-report=term --cov-report=json
+
+      # The badge reads coverage.json from the badges branch through shields.io
+      - name: Update coverage badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          percent=$(jq '.totals.percent_covered | floor' coverage.json)
+          color=red
+          if [ "$percent" -ge 80 ]; then color=brightgreen
+          elif [ "$percent" -ge 60 ]; then color=yellow
+          fi
+
+          cd "$(mktemp -d)"
+          git init -q -b badges
+          echo "{\"schemaVersion\": 1, \"label\": \"coverage\", \"message\": \"${percent}%\", \"color\": \"${color}\"}" > coverage.json
+          git add coverage.json
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -qm "Update coverage badge"
+          git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" badges
 
   docker:
     runs-on: ubuntu-latest
