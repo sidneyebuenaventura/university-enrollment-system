@@ -93,6 +93,29 @@ def handle_payment_settled(event: GenericModelEvent):
     notification_send(notification=notification)
 
 
+def handle_payment_rejected(event: GenericModelEvent):
+    transaction = event.object.get_from_db()
+
+    if not transaction:
+        return
+
+    student = transaction.soa.user.student
+
+    notification = Notification.objects.create(
+        message_key=MessageKeys.PAYMENT_REJECTED,
+        context={
+            "full_name": f"{student.first_name} {student.last_name}",
+            "reference_number": transaction.payment_id,
+            "bank": transaction.get_bank_display(),
+            "transfer_reference": transaction.transfer_reference,
+            "amount": format_currency(transaction.amount or 0),
+            "remarks": transaction.remarks,
+        },
+    )
+    notification.recipients.add(transaction.soa.user)
+    notification_send(notification=notification)
+
+
 def handle_student_password_generated(event: GenericModelEvent):
     student = event.object.get_from_db()
 

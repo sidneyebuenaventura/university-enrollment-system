@@ -15,6 +15,7 @@ class MessageKeys:
     ENROLLMENT_REMINDERS = "enrollment_reminders"
     ENROLLMENT_SUCCESS = "enrollment_success"
     STATEMENT_OF_ACCOUNT = "statement_of_account"
+    PAYMENT_REJECTED = "payment_rejected"
     REQUEST_ADD_SUBJECT_APPROVED = "request_add_subject_approved"
     REQUEST_ADD_SUBJECT_REJECTED = "request_add_subject_rejected"
     REQUEST_CHANGE_SCHEDULE_APPROVED = "request_change_schedule_approved"
@@ -53,6 +54,10 @@ EMAIL_MESSAGES = {
     MessageKeys.STATEMENT_OF_ACCOUNT: EmailMessage(
         subject="Your Enrollment Statement of Account",
         template="notification/statement_of_account.html",
+    ),
+    MessageKeys.PAYMENT_REJECTED: EmailMessage(
+        subject="We Couldn't Validate Your Fund Transfer",
+        template="notification/payment_rejected.html",
     ),
     MessageKeys.REQUEST_ADD_SUBJECT_APPROVED: EmailMessage(
         subject="Add Subject Request Approved",
