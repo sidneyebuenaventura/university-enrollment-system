@@ -32,7 +32,9 @@ services:
       - 8025:8025
 
   base:
-    build: .
+    build:
+      context: .
+      target: dev
     image: university/base
     container_name: university_base
     command: echo 0

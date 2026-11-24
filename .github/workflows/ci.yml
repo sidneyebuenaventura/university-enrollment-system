@@ -115,4 +115,17 @@ jobs:
         run: docker build -t university .
 
       - name: Smoke test
-        run: docker run --rm university python -c "import django; print(django.get_version())"
+        run: |
+          docker run -d --name app -p 8000:8000 \
+            -e SECRET_KEY=ci -e DATABASE_URL=sqlite:////tmp/db.sqlite3 \
+            university sh -c "python manage.py migrate -v 0 && exec docker-entrypoint.sh runprod"
+
+          for i in $(seq 30); do
+            curl -sf -o /dev/null localhost:8000/healthcheck/ && break
+            sleep 2
+          done
+
+          curl -sf -o /dev/null localhost:8000/healthcheck/ \
+            && curl -sf -o /dev/null localhost:8000/admin/login/ \
+            && curl -sf -o /dev/null localhost:8000/static/logo.svg \
+            || { docker logs app; exit 1; }
