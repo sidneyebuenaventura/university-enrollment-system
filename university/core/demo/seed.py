@@ -14,8 +14,10 @@ from datetime import datetime, time, timedelta
 from decimal import Decimal
 from io import StringIO
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.core.files.base import ContentFile
 from django.core.management import call_command
 from django.utils import timezone
 from django.utils.text import slugify
@@ -113,6 +115,41 @@ def at(day, hour=9):
 
 def backdate(obj, when):
     type(obj).objects.filter(pk=obj.pk).update(created_at=when)
+
+
+def receipt_pdf(bank, reference, amount, when) -> bytes:
+    """A one-page PDF standing in for a student's transfer receipt"""
+    lines = [
+        "Fund Transfer Receipt",
+        f"Bank: {bank}",
+        f"Reference: {reference}",
+        f"Amount: PHP {amount:,.2f}",
+        f"Date: {timezone.localtime(when):%Y-%m-%d %H:%M}",
+    ]
+    text = " 0 -20 Td ".join(f"({line}) Tj" for line in lines)
+    stream = f"BT /F1 12 Tf 30 160 Td {text} ET".encode()
+
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R "
+        b"/Resources << /Font << /F1 5 0 R >> >> >>",
+        b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+
+    pdf = b"%PDF-1.4\n"
+    offsets = []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(pdf))
+        pdf += b"%d 0 obj\n%s\nendobj\n" % (number, body)
+
+    xref = len(pdf)
+    pdf += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    pdf += b"".join(b"%010d 00000 n \n" % offset for offset in offsets)
+    pdf += b"trailer\n<< /Size %d /Root 1 0 R >>\n" % (len(objects) + 1)
+    pdf += b"startxref\n%d\n%%%%EOF\n" % xref
+    return pdf
 
 
 class DemoSeeder:
@@ -882,14 +919,17 @@ class DemoSeeder:
 
     def _pay(self, soa, amount, when):
         if self.rng.random() < 0.6:
-            payment = OverTheCounterTransaction.objects.create(
-                soa=soa,
-                bank=self.rng.choice(OverTheCounterTransaction.Banks.values),
-                amount=amount,
+            # Sent the day before and validated by finance the next day
+            payment = self._fund_transfer(
+                soa,
+                amount,
+                when - timedelta(days=1),
                 status=OverTheCounterTransaction.Statuses.SETTLED,
                 settled_at=when,
+                validated_at=when,
+                validated_by=self.admin,
             )
-            description = "Bank payment"
+            description = f"Fund transfer {payment.bank} {payment.transfer_reference}"
         else:
             payment = CashierTransaction.objects.create(
                 soa=soa,
@@ -912,6 +952,27 @@ class DemoSeeder:
         )
         backdate(payment, when)
         backdate(transaction, when)
+
+    def _fund_transfer(self, soa, amount, submitted_at, **fields):
+        bank = self.rng.choice(list(settings.UNIVERSITY_PAYMENT_BANK_ACCOUNTS))
+        reference = f"FT{self.rng.randint(10**9, 10**10 - 1)}"
+
+        payment = OverTheCounterTransaction.objects.create(
+            soa=soa,
+            bank=bank,
+            amount=amount,
+            transfer_reference=reference,
+            transfer_date=timezone.localtime(submitted_at).date(),
+            submitted_at=submitted_at,
+            **fields,
+        )
+        payment.receipt.save(
+            "receipt.pdf",
+            ContentFile(receipt_pdf(bank, reference, amount, submitted_at)),
+            save=False,
+        )
+        payment.generate_id()
+        return payment
 
     # Next semester's enrollment
 
@@ -946,6 +1007,11 @@ class DemoSeeder:
 
         enrollment_role = Role.objects.get(name=ReservedRole.STUDENT_ENROLLMENT)
 
+        # Half the students still choosing classes have sent a transfer that
+        # finance hasn't validated yet. The first one is already overdue.
+        waiting = itertools.cycle([True, False])
+        overdue = True
+
         for student, course_code, discount, plan in self.next_semester_plans:
             enrolled = plan == "enrolled"
             enrollment = self._enroll(
@@ -963,10 +1029,20 @@ class DemoSeeder:
                 section=self.rng.choice([1, 2]),
             )
 
+            soa = enrollment.statement_of_account
+
             if enrolled:
-                soa = enrollment.statement_of_account
                 self._pay(soa, money(soa.min_amount), self.now - timedelta(hours=6))
                 student.user.groups.remove(enrollment_role)
+            elif next(waiting):
+                hours = 72 if overdue else self.rng.randint(2, 30)
+                self._fund_transfer(
+                    soa,
+                    money(soa.min_amount),
+                    self.now - timedelta(hours=hours),
+                    status=OverTheCounterTransaction.Statuses.FOR_VALIDATION,
+                )
+                overdue = False
 
     def create_announcements(self):
         next_semester = self.semesters[(self.current_year.id, SS)]
