@@ -778,7 +778,7 @@ def soa_create(
 
         soa.transactions.create(
             student=student,
-            description=f"Discount ({enrollment.discount.name})",
+            description=f"Discount ({discount.name})",
             amount=-abs(total_discount),
             ref=discount,
         )
