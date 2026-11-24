@@ -1,5 +1,9 @@
+from decimal import Decimal
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
+from django.utils import timezone
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
@@ -7,6 +11,7 @@ from university.core.accounts.models import AcademicYear, School
 from university.core.accounts.selectors import current_semester_get
 from university.core.students.models import Student
 from university.framework.serializers import ChoiceField, inline_serializer_class
+from university.framework.validators import receipt_file_validator
 
 from . import models
 
@@ -35,10 +40,65 @@ class BukasPaymentOutputSerializer(PaymentCreateSerializer):
 class OverTheCounterCreateSerializer(PaymentCreateSerializer):
     bank = serializers.ChoiceField(choices=models.OverTheCounterTransaction.Banks)
 
+    def validate_bank(self, value):
+        if value not in settings.UNIVERSITY_PAYMENT_BANK_ACCOUNTS:
+            raise serializers.ValidationError("Transfers to this bank aren't accepted.")
+        return value
+
 
 class OverTheCounterOutputSerializer(PaymentCreateSerializer):
     reference_number = serializers.CharField(max_length=255)
     bank = serializers.CharField(max_length=255)
+    account_name = serializers.CharField()
+    account_number = serializers.CharField()
+    validation_days = serializers.IntegerField()
+
+
+class FundTransferSubmitSerializer(serializers.Serializer):
+    transfer_reference = serializers.CharField(max_length=255)
+    transfer_date = serializers.DateField()
+    amount = serializers.DecimalField(
+        max_digits=9, decimal_places=2, min_value=Decimal("0.01")
+    )
+    receipt = serializers.FileField(validators=[receipt_file_validator])
+
+    def validate_transfer_date(self, value):
+        if value > timezone.localdate():
+            raise serializers.ValidationError(
+                "The transfer date can't be in the future."
+            )
+        return value
+
+
+class FundTransferValidateSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        required=False,
+        help_text="Amount that arrived, if it differs from what the student entered",
+    )
+
+
+class FundTransferRejectSerializer(serializers.Serializer):
+    remarks = serializers.CharField(help_text="Sent to the student")
+
+
+class FundTransferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.OverTheCounterTransaction
+        fields = (
+            "payment_id",
+            "bank",
+            "amount",
+            "status",
+            "transfer_reference",
+            "transfer_date",
+            "receipt",
+            "submitted_at",
+            "validation_due",
+            "remarks",
+        )
 
 
 class CashierOutputSerializer(PaymentCreateSerializer):
@@ -116,6 +176,10 @@ class OverTheCounterTransactionSerializer(serializers.ModelSerializer):
             "status",
             "error_message",
             "amount",
+            "transfer_reference",
+            "submitted_at",
+            "validation_due",
+            "remarks",
             "created_at",
             "updated_at",
         )
@@ -373,6 +437,14 @@ class OtcTransactionListApiSerializer(serializers.ModelSerializer):
             "error_message",
             "student",
             "school",
+            "transfer_reference",
+            "transfer_date",
+            "receipt",
+            "submitted_at",
+            "validation_due",
+            "is_overdue",
+            "remarks",
+            "validated_at",
             "settled_at",
             "created_at",
         )

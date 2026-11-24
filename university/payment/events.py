@@ -3,6 +3,7 @@ from university.framework.events import EventBus
 # Event names should follow the <service_name>.<event_name> format
 PAYMENT_SUCCESS = "payment.payment_success"
 PAYMENT_SETTLED = "payment.payment_settled"
+PAYMENT_REJECTED = "payment.payment_rejected"
 
 DRAGONPAY_SETTLEMENT_CREATED = "payment.dragonpay_settlement_created"
 BUKAS_SETTLEMENT_CREATED = "payment.bukas_settlement_created"

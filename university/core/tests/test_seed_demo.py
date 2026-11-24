@@ -18,6 +18,7 @@ from university.core.students.selectors import (
     enrollment_subjects_list,
 )
 from university.framework.events import EventBus
+from university.payment.models import OverTheCounterTransaction
 
 User = get_user_model()
 
@@ -29,7 +30,8 @@ def publish():
 
 
 @pytest.fixture
-def seeded(db, publish):
+def seeded(db, publish, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
     call_command("seed_demo", students=10, stdout=StringIO())
 
 
@@ -90,6 +92,15 @@ class TestSeedDemo:
 
         assert bookings
         assert max(bookings.values()) == 1
+
+    def test_transfers_waiting_for_validation(self):
+        waiting = OverTheCounterTransaction.objects.filter(
+            status=OverTheCounterTransaction.Statuses.FOR_VALIDATION
+        )
+
+        assert waiting.exists()
+        assert any(transfer.is_overdue for transfer in waiting)
+        assert all(transfer.receipt for transfer in waiting)
 
     def test_no_events_are_published(self, publish):
         publish.assert_not_called()

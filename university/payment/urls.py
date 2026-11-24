@@ -125,9 +125,24 @@ otc_urlpatterns = [
         name="otc-transactions-list",
     ),
     path(
+        "otc/transactions/<payment_id>/validate/",
+        views.OtcTransactionValidateApi.as_view(),
+        name="otc-transactions-validate",
+    ),
+    path(
+        "otc/transactions/<payment_id>/reject/",
+        views.OtcTransactionRejectApi.as_view(),
+        name="otc-transactions-reject",
+    ),
+    path(
         "student/otc/transactions/<payment_id>/",
         views.StudentOTCTransactionUpdateApi.as_view(),
         name="student-otc-transactions-detail",
+    ),
+    path(
+        "student/otc/transactions/<payment_id>/submit/",
+        views.StudentFundTransferSubmitApi.as_view(),
+        name="student-otc-transactions-submit",
     ),
 ]
 

@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils import timezone
 from hashids import Hashids
 
 from university.core.accounts.models import School
@@ -24,7 +25,7 @@ User = get_user_model()
 class PaymentMethods(models.TextChoices):
     DRAGONPAY = "DP", "Dragonpay"
     BUKAS = "B", "Bukas"
-    OTC = "OTC", "Bank"
+    OTC = "OTC", "Fund Transfer"
     CASHIER = "C", "School Cashier"
 
 
@@ -283,9 +284,23 @@ class BukasTransaction(PaymentTransaction):
         return self.status == self.Statuses.FOR_FUNDING
 
 
+def payment_receipt_file_path(instance, filename):
+    file_ext = filename.split(".")[-1]
+    file_name = str(uuid.uuid4()).replace("-", "")
+    return f"receipts/{file_name}.{file_ext}"
+
+
 class OverTheCounterTransaction(PaymentTransaction):
+    """Payment sent to one of the university's bank accounts.
+
+    The student gets a reference number, transfers the money, then submits
+    the transfer details. Finance checks the bank and validates or rejects it.
+    """
+
     class Statuses(models.TextChoices):
         PENDING = "P", "Pending"
+        FOR_VALIDATION = "V", "For Validation"
+        REJECTED = "R", "Rejected"
         FAILED = "F", "Failed"
         SUCCESS = "S", "Success"
         SETTLED = "SS", "Settled"
@@ -303,12 +318,43 @@ class OverTheCounterTransaction(PaymentTransaction):
     )
     settled_at = models.DateTimeField(blank=True, null=True)
 
+    # Sent by the student after transferring
+    transfer_reference = models.CharField(max_length=255, blank=True)
+    transfer_date = models.DateField(blank=True, null=True)
+    receipt = models.FileField(
+        upload_to=payment_receipt_file_path, blank=True, null=True
+    )
+    submitted_at = models.DateTimeField(blank=True, null=True)
+
+    # Set by finance when they validate or reject it
+    validated_at = models.DateTimeField(blank=True, null=True)
+    validated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="validated_transfers",
+    )
+
     def __str__(self):
-        return f"OTC Payment: {self.soa}"
+        return f"Fund Transfer: {self.soa}"
 
     @property
     def type(self):
         return PaymentMethods.OTC.label
+
+    @property
+    def validation_due(self):
+        if not self.submitted_at:
+            return None
+        return self.submitted_at + settings.UNIVERSITY_PAYMENT_VALIDATION_TIME
+
+    @property
+    def is_overdue(self) -> bool:
+        return (
+            self.status == self.Statuses.FOR_VALIDATION
+            and self.validation_due < timezone.now()
+        )
 
     def is_successful(self):
         return self.status == self.Statuses.SUCCESS

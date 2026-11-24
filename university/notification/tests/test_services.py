@@ -11,7 +11,9 @@ from university.framework.events import GenericEvent, GenericModelEvent
 from university.notification import app_settings, services
 from university.notification.messages import MessageKeys
 from university.notification.models import EmailChannel, Notification
+from university.payment import events as payment_events
 from university.payment.events import PAYMENT_SETTLED
+from university.payment.models import OverTheCounterTransaction
 
 
 def last_notification():
@@ -133,7 +135,7 @@ class TestPaymentSettled:
         )
 
         assert last_notification().context["payment_method"] == (
-            f"Bank - {transaction.bank}"
+            f"Fund Transfer - {transaction.bank}"
         )
 
 
@@ -141,7 +143,7 @@ def test_every_handler_has_a_matching_event():
     # Handlers are looked up by event name, so a typo means it never runs
     published = [
         value
-        for value in [*vars(events).values(), PAYMENT_SETTLED]
+        for value in [*vars(events).values(), *vars(payment_events).values()]
         if isinstance(value, str) and "." in value
     ]
     event_names = {value.split(".")[1] for value in published}
@@ -218,3 +220,24 @@ class TestScheduleReminders:
         )
 
         assert not Notification.objects.exists()
+
+
+@pytest.mark.django_db
+def test_payment_rejected(over_the_counter_transaction_factory):
+    transaction = over_the_counter_transaction_factory(
+        amount=Decimal("5000.00"),
+        status=OverTheCounterTransaction.Statuses.REJECTED,
+        transfer_reference="FT-12345",
+        remarks="Amount not found",
+    )
+    transaction.generate_id()
+
+    services.handle_payment_rejected(
+        event=GenericModelEvent(payment_events.PAYMENT_REJECTED, object=transaction)
+    )
+
+    notification = last_notification()
+    assert notification.message_key == MessageKeys.PAYMENT_REJECTED
+    assert list(notification.recipients.all()) == [transaction.soa.user]
+    assert notification.context["reference_number"] == transaction.payment_id
+    assert notification.context["remarks"] == "Amount not found"

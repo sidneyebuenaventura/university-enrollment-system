@@ -1,11 +1,14 @@
 import csv
 
 import structlog
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction as db_transaction
+from django.db.models import Q
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import BooleanFilter, DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers as drf_serializers
 from rest_framework import status
@@ -321,14 +324,28 @@ class BukasTransactionListAPIView(PermissionRequiredMixin, ListAPIView):
 
 
 class OtcTransactionListApi(PermissionRequiredMixin, ListAPIView):
-    """OTC Transaction List"""
+    """Fund Transfer List
+
+    Filter with `status=V` for transfers waiting for validation, and
+    `overdue=true` for the ones past the validation lead time.
+    """
 
     school_field = "soa__enrollment__student__course__school"
 
     class Filter(SchoolFilterSet):
+        overdue = BooleanFilter(method="filter_overdue")
+
         class Meta:
             model = models.OverTheCounterTransaction
             fields = ["school", "status"]
+
+        def filter_overdue(self, queryset, name, value):
+            cutoff = timezone.now() - settings.UNIVERSITY_PAYMENT_VALIDATION_TIME
+            overdue = Q(
+                status=models.OverTheCounterTransaction.Statuses.FOR_VALIDATION,
+                submitted_at__lt=cutoff,
+            )
+            return queryset.filter(overdue) if value else queryset.exclude(overdue)
 
     Filter.school_field = school_field
 
@@ -344,10 +361,100 @@ class OtcTransactionListApi(PermissionRequiredMixin, ListAPIView):
         "soa__user__student__last_name",
         "soa__user__student__id_number",
     ]
-    ordering_fields = ["amount", "settled_at", "created_at"]
+    ordering_fields = ["amount", "submitted_at", "settled_at", "created_at"]
 
     permission_classes = [IsAuthenticated, IsAdminUser]
-    permission = ["payment.view_cashiertransaction"]
+    permission = ["payment.view_overthecountertransaction"]
+
+
+class OtcTransactionValidateApi(PermissionRequiredMixin, GenericAPIView):
+    """Fund Transfer Validate
+
+    Credits the transfer to the student's statement of account.
+    """
+
+    queryset = models.OverTheCounterTransaction.objects.all()
+    serializer_class = serializers.FundTransferValidateSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission = ["payment.change_overthecountertransaction"]
+
+    @extend_schema(responses=serializers.FundTransferSerializer)
+    def post(self, request, payment_id):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with db_transaction.atomic():
+            transaction = get_object_or_404(
+                self.get_queryset().select_for_update(), payment_id=payment_id
+            )
+            services.otc_transaction_validate(
+                transaction=transaction,
+                staff=request.user,
+                **serializer.validated_data,
+            )
+
+        return Response(serializers.FundTransferSerializer(transaction).data)
+
+
+class OtcTransactionRejectApi(PermissionRequiredMixin, GenericAPIView):
+    """Fund Transfer Reject
+
+    The remarks are emailed to the student.
+    """
+
+    queryset = models.OverTheCounterTransaction.objects.all()
+    serializer_class = serializers.FundTransferRejectSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission = ["payment.change_overthecountertransaction"]
+
+    @extend_schema(responses=serializers.FundTransferSerializer)
+    def post(self, request, payment_id):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with db_transaction.atomic():
+            transaction = get_object_or_404(
+                self.get_queryset().select_for_update(), payment_id=payment_id
+            )
+            services.otc_transaction_reject(
+                transaction=transaction,
+                staff=request.user,
+                **serializer.validated_data,
+            )
+
+        return Response(serializers.FundTransferSerializer(transaction).data)
+
+
+@extend_schema(tags=[Tags.OTC])
+class StudentFundTransferSubmitApi(GenericAPIView):
+    """Student Fund Transfer Submit
+
+    Sends the transfer details and receipt for finance to validate.
+    """
+
+    serializer_class = serializers.FundTransferSubmitSerializer
+    permission_classes = [IsAuthenticated, IsStudentUser]
+    parser_classes = [MultiPartParser]
+
+    def get_queryset(self):
+        return models.OverTheCounterTransaction.objects.filter(
+            soa__user=self.request.user
+        )
+
+    @extend_schema(responses=serializers.FundTransferSerializer)
+    def post(self, request, payment_id):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with db_transaction.atomic():
+            transaction = get_object_or_404(
+                self.get_queryset().select_for_update(), payment_id=payment_id
+            )
+            services.otc_transaction_submit(
+                transaction=transaction, **serializer.validated_data
+            )
+
+        return Response(serializers.FundTransferSerializer(transaction).data)
 
 
 class CashierTransactionListApi(PermissionRequiredMixin, ListAPIView):

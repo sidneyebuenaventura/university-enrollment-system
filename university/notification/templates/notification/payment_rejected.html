@@ -1,0 +1,59 @@
+{% extends "notification/base.html" %}
+
+{% block title %}Fund Transfer Not Validated{% endblock %}
+
+{% block body %}
+<p>Dear <b>{{ full_name }}</b>,</p>
+
+<p>
+    We couldn't validate the fund transfer you submitted for payment reference
+    <b>{{ reference_number }}</b>.
+</p>
+
+<table class="table">
+  <tbody>
+    <tr>
+      <td>Bank</td>
+      <td>{{ bank }}</td>
+    </tr>
+    <tr>
+      <td>Transfer Reference</td>
+      <td>{{ transfer_reference }}</td>
+    </tr>
+    <tr>
+      <td>Amount</td>
+      <td>{{ amount }}</td>
+    </tr>
+    <tr>
+      <td>Remarks</td>
+      <td>{{ remarks }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+    Please check the details and submit the transfer again from the student portal.
+    Your reserved classes are still on hold.
+</p>
+
+<p>
+    For questions about your payment, you may contact the Finance Office at
+    <b>
+        {{ app_settings.MESSAGE_FINANCE_EMAIL }}
+        <span> / </span>
+        {{ app_settings.MESSAGE_FINANCE_PHONE }}
+    </b>.
+</p>
+<p>{{ app_settings.UNIVERSITY_NAME }} Admin</p>
+<p>
+    <i>
+        <small>
+            Disclaimer: This email and its attachments may be confidential and are intended solely for the
+            addressee/s. If you are not an intended addressee, please notify the sender and delete this
+            email immediately without printing, forwarding, or showing the contents to anyone. The views
+            expressed in this email are those of the individual sender, and are not necessarily the views
+            of {{ app_settings.UNIVERSITY_NAME }}.
+        </small>
+    </i>
+</p>
+{% endblock %}
