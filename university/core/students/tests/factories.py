@@ -2,18 +2,21 @@ from datetime import date
 
 import factory
 import pytest
-from django.utils import timezone
 from factory.django import DjangoModelFactory
-from pytest_factoryboy import register
+from pytest_factoryboy import LazyFixture, register
 
 from university.core.accounts.tests.factories import (
     AcademicYearFactory,
     SemesterFactory,
     UserFactory,
 )
-from university.core.cms.tests.factories import ClassFactory, CourseFactory, CurriculumFactory
+from university.core.cms.tests.factories import (
+    ClassFactory,
+    CourseFactory,
+    CurriculumFactory,
+)
 from university.core.students import models
-from university.framework.tests import fake, fake_amount
+from university.framework.tests import fake
 
 
 @pytest.fixture
@@ -42,7 +45,7 @@ class StudentFactory(DjangoModelFactory):
 
     type = models.Student.Types.STUDENT
     status = factory.Iterator(models.Student.Statuses)
-    id_number = factory.Sequence(lambda n: "STUDENT-2022-%05d" % n)
+    id_number = factory.Sequence(lambda n: f"STUDENT-2022-{n:05d}")
 
     first_name = factory.LazyFunction(fake.first_name)
     middle_name = factory.LazyFunction(fake.last_name)
@@ -83,6 +86,7 @@ class StudentFactory(DjangoModelFactory):
 
     class Meta:
         model = models.Student
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def password_histories(self, create, extracted, **kwargs):
@@ -124,12 +128,14 @@ class EnrollmentFactory(DjangoModelFactory):
         model = models.Enrollment
 
 
-@register
+@register(enrollment=LazyFixture("base_enrollment"))
 class EnrolledClassFactory(DjangoModelFactory):
     enrollment = factory.SubFactory(EnrollmentFactory)
+    student = factory.SelfAttribute("enrollment.student")
+    status = models.EnrolledClass.Statuses.ENROLLED
 
     @factory.lazy_attribute
-    def subject_class(self):
+    def klass(self):
         # SubFactory fails due to auto fixtures resulting to a
         # fixture with `class` variable name.
         return ClassFactory()
@@ -141,10 +147,21 @@ class EnrolledClassFactory(DjangoModelFactory):
 @register
 class EnrolledClassGradeFactory(DjangoModelFactory):
     enrolled_class = factory.SubFactory(EnrolledClassFactory)
-    grade = factory.LazyFunction(fake_amount)
+    final_grade = factory.LazyFunction(lambda: fake.pyint(75, 99))
+    status = models.EnrolledClassGrade.Statuses.PASSED
 
     class Meta:
         model = models.EnrolledClassGrade
+
+
+@register(enrollment=LazyFixture("base_enrollment"))
+class EnrollmentGradeFactory(DjangoModelFactory):
+    enrollment = factory.SubFactory(EnrollmentFactory)
+    general_weighted_average = factory.LazyFunction(lambda: fake.pyint(75, 99))
+    grading_status = models.EnrollmentGrade.GradingStatuses.PASSED
+
+    class Meta:
+        model = models.EnrollmentGrade
 
 
 @register

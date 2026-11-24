@@ -24,7 +24,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Fee data upload... ")
+            sys.stdout.write("Fee data upload... ")
 
             Fee.objects.filter(academic_year__isnull=True).delete()
 
@@ -54,7 +54,7 @@ class Command(BaseCommand):
                 else:
                     self.updated_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {self.created_counter+self.updated_counter} FEE DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {self.created_counter + self.updated_counter} FEE DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {self.created_counter} records.", "created"

@@ -1,4 +1,3 @@
-from sys import modules
 from django.core.management.base import BaseCommand
 
 from university.core.accounts.models import Module

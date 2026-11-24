@@ -1,7 +1,6 @@
 import csv
 from decimal import Decimal
 from random import choice
-from typing import Dict
 
 import botocore.exceptions
 from django.contrib.auth import get_user_model
@@ -14,7 +13,10 @@ from sentry_sdk import capture_exception
 from university.core import events
 from university.core.accounts.constants import ReservedRole
 from university.core.accounts.models import AcademicYear, Personnel, Role
-from university.core.accounts.selectors import current_academic_year_get, next_semester_get
+from university.core.accounts.selectors import (
+    current_academic_year_get,
+    next_semester_get,
+)
 from university.core.accounts.services import user_role_remove
 from university.core.cms.models import (
     Class,
@@ -27,7 +29,6 @@ from university.core.cms.models import (
     RemarkCode,
     Semesters,
 )
-from university.core.cms.selectors import subject_has_class
 from university.core.cms.services import class_grade_state_update
 from university.framework.events import event_publisher
 from university.framework.exceptions import ServiceException
@@ -114,7 +115,9 @@ def enrollment_step_1_information(*, enrollment: models.Enrollment, data: dict):
     student = enrollment.student
     student.phone_no = data.get("contact_number", student.phone_no)
     student.user.email = data.get("institutional_email", student.user.email)
-    student.institutional_email = data.get("institutional_email", student.institutional_email)
+    student.institutional_email = data.get(
+        "institutional_email", student.institutional_email
+    )
     student.email = data.get("personal_email", student.email)
     student.father_name = data.get("father_name", student.father_name)
     student.father_occupation = data.get("father_occupation", student.father_occupation)
@@ -197,7 +200,7 @@ def enrollment_step_3_subjects(*, enrollment: models.Enrollment, data: dict):
         models.EnrolledClass.objects.create(**enrolled_class_data)
 
     _enrollment_update(enrollment=enrollment, data={"step": data.get("step")})
-    soa = soa_create(enrollment=enrollment, override=True)
+    soa_create(enrollment=enrollment, override=True)
 
 
 def enrollment_step_4_payments(*, enrollment: models.Enrollment, data: dict):
@@ -569,9 +572,7 @@ def enrollment_status_evaluate(*, enrollment: models.Enrollment):
     ]
 
     if has_failed and has_balance:
-        status = (
-            models.EnrollmentStatus.BlockStatuses.BLOCKED_WITH_OUTSTANDING_AND_FAILED_GRADE
-        )
+        status = models.EnrollmentStatus.BlockStatuses.BLOCKED_WITH_OUTSTANDING_AND_FAILED_GRADE
     elif has_failed:
         status = models.EnrollmentStatus.BlockStatuses.BLOCKED_WITH_FAILED_SUBJECT
     elif has_balance:
@@ -710,12 +711,12 @@ def grade_sheet_process(*, grade_sheet: models.GradeSheet):
             ):
                 data["tentative_final_grade"] = cells[9].value or None
             else:
-                data[
-                    "tentative_final_grade"
-                ] = enrolled_class_grade.tentative_final_grade
-                data[
-                    "tentative_final_grade_state"
-                ] = enrolled_class_grade.tentative_final_grade_state
+                data["tentative_final_grade"] = (
+                    enrolled_class_grade.tentative_final_grade
+                )
+                data["tentative_final_grade_state"] = (
+                    enrolled_class_grade.tentative_final_grade_state
+                )
 
             if (
                 enrolled_class_grade.final_grade_state
@@ -732,13 +733,6 @@ def grade_sheet_process(*, grade_sheet: models.GradeSheet):
                 "tentative_final_grade": cells[9].value or None,
                 "final_grade": cells[12].value or None,
             }
-
-        if not enrolled_class_grade or (
-            enrolled_class_grade
-            and enrolled_class_grade.prelim_grade_state
-            in models.EnrolledClassGrade.EDITABLE_GRADE_STATES
-        ):
-            pass
 
         grade_sheet.rows.create(student=student, status=status, **data)
 
@@ -808,7 +802,7 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
 
     try:
         file_contents = gwa_sheet.file.read()
-        csv_data = file_contents.decode().split("\r\n")
+        csv_data = file_contents.decode().splitlines()
         reader = csv.reader(csv_data)
 
         for row in reader:
@@ -831,16 +825,15 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
                 "status": row[6],
             }
 
-            result, err = enrollment_grade_process(data=data)
+            result, _ = enrollment_grade_process(data=data)
             if result:
                 stats["success"] += 1
             else:
-                print(err)
                 stats["invalid"] += 1
 
     except (UnicodeDecodeError, botocore.exceptions.ClientError) as error:
         _gwa_sheet_failed(
-            journal_voucher=gwa_sheet,
+            gwa_sheet=gwa_sheet,
             error="Error reading gwa sheet file",
         )
         capture_exception(error)
@@ -853,7 +846,7 @@ def gwa_sheet_process(*, gwa_sheet: models.GeneralWeightedAverageSheet) -> None:
     gwa_sheet.save()
 
 
-def enrollment_grade_process(*, data: Dict) -> tuple:
+def enrollment_grade_process(*, data: dict) -> tuple:
     """Process Enrollment Grade
 
     Args:
@@ -912,9 +905,7 @@ def enrollment_grade_process(*, data: Dict) -> tuple:
         data.get("gwa") if data.get("gwa") != "NO GWA" else Decimal(0)
     )
     enrollment.grade.grading_status = grading_status_mapping.get(data.get("status"))
-    enrollment.grade.pass_percentage = grading_status_mapping.get(
-        data.get("pass_percentage")
-    )
+    enrollment.grade.pass_percentage = data.get("pass_percentage") or None
     enrollment.grade.remark_code = remark_code
     enrollment.grade.save()
 
@@ -922,21 +913,21 @@ def enrollment_grade_process(*, data: Dict) -> tuple:
 
 
 def student_request_review_history_create(
-    *, user=User, data: Dict
+    *, user=User, data: dict
 ) -> models.StudentRequestReviewHistory:
     return models.StudentRequestReviewHistory.objects.create(user=user, **data)
 
 
 def _generate_choice_label_mapping(*, choices) -> str:
     choice_mapping = {}
-    for choice in choices:
-        choice_mapping[choice.value] = choice.label
+    for item in choices:
+        choice_mapping[item.value] = item.label
 
     return choice_mapping
 
 
 def change_schedule_request_create(
-    *, student: models.Student, data: Dict
+    *, student: models.Student, data: dict
 ) -> models.ChangeScheduleRequest:
     data.pop("type")
     request = models.ChangeScheduleRequest.objects.create(student=student, **data)
@@ -946,7 +937,7 @@ def change_schedule_request_create(
     return request, status
 
 
-def add_subject_request_create(*, student: models.Student, data: Dict) -> tuple:
+def add_subject_request_create(*, student: models.Student, data: dict) -> tuple:
     data.pop("type")
     request = models.AddSubjectRequest.objects.create(student=student, **data)
     status = _generate_choice_label_mapping(
@@ -955,7 +946,7 @@ def add_subject_request_create(*, student: models.Student, data: Dict) -> tuple:
     return request, status
 
 
-def open_class_request_create(*, student: models.Student, data: Dict) -> tuple:
+def open_class_request_create(*, student: models.Student, data: dict) -> tuple:
     data.pop("type")
     request = models.OpenClassRequest.objects.create(student=student, **data)
     status = _generate_choice_label_mapping(
@@ -964,7 +955,7 @@ def open_class_request_create(*, student: models.Student, data: Dict) -> tuple:
     return request, status
 
 
-def withdrawal_request_create(*, student: models.Student, data: Dict) -> tuple:
+def withdrawal_request_create(*, student: models.Student, data: dict) -> tuple:
     category = models.WithdrawalRequest.Categories.PARTIAL_WITHDRAWAL
     if data.pop("type") == models.StudentRequestTypes.FULL_WITHDRAWAL:
         category = models.WithdrawalRequest.Categories.FULL_WITHDRAWAL
@@ -978,7 +969,7 @@ def withdrawal_request_create(*, student: models.Student, data: Dict) -> tuple:
     return request, status
 
 
-def student_request_create(*, student: models.Student, data: Dict) -> Dict:
+def student_request_create(*, student: models.Student, data: dict) -> dict:
     request_create_method_mapping = {
         models.StudentRequestTypes.CHANGE_SCHEDULE.value: change_schedule_request_create,
         models.StudentRequestTypes.ADD_SUBJECT.value: add_subject_request_create,
@@ -1000,7 +991,7 @@ def student_request_create(*, student: models.Student, data: Dict) -> Dict:
 
 
 def change_schedule_request_update(
-    *, request: models.ChangeScheduleRequest, user: User, data: Dict
+    *, request: models.ChangeScheduleRequest, user: User, data: dict
 ) -> models.ChangeScheduleRequest:
     _data = data.copy()
     remarks = _data.pop("remarks")
@@ -1027,7 +1018,7 @@ def change_schedule_request_update(
 
 
 def add_subject_request_update(
-    *, request: models.AddSubjectRequest, user: User, data: Dict
+    *, request: models.AddSubjectRequest, user: User, data: dict
 ) -> models.AddSubjectRequest:
     _data = data.copy()
     remarks = _data.pop("remarks")
@@ -1054,7 +1045,7 @@ def add_subject_request_update(
 
 
 def open_class_request_update(
-    *, request: models.OpenClassRequest, user: User, data: Dict
+    *, request: models.OpenClassRequest, user: User, data: dict
 ) -> models.OpenClassRequest:
     _data = data.copy()
     remarks = _data.pop("remarks")
@@ -1100,7 +1091,7 @@ def open_class_request_update(
 
 
 def withdrawal_request_update(
-    *, request: models.WithdrawalRequest, user: User, data: Dict
+    *, request: models.WithdrawalRequest, user: User, data: dict
 ) -> models.WithdrawalRequest:
     _data = data.copy()
     remarks = _data.pop("remarks")

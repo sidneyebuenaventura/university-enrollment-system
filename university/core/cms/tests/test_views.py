@@ -197,7 +197,9 @@ class TestBuildingListRetrieveAPIView:
 
     @apply_perms("core_cms.view_building", client="staff_api_client")
     def test_building_retrieve(self, staff_api_client, building):
-        url = reverse("university.core.cms:buildings-detail", kwargs={"pk": building.pk})
+        url = reverse(
+            "university.core.cms:buildings-detail", kwargs={"pk": building.pk}
+        )
         response = staff_api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert_fields = [
@@ -314,7 +316,9 @@ class TestCurriculumViewSet:
         client="staff_api_client",
     )
     def test_curriculum_retrieve(self, staff_api_client, curriculum):
-        url = reverse("university.core.cms:curriculums-detail", kwargs={"pk": curriculum.pk})
+        url = reverse(
+            "university.core.cms:curriculums-detail", kwargs={"pk": curriculum.pk}
+        )
         response = staff_api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert_fields = [
@@ -387,7 +391,8 @@ class TestRoomClassificationViewSet:
     @apply_perms("core_cms.view_classification", client="staff_api_client")
     def test_room_classification_retrieve(self, staff_api_client, classification):
         url = reverse(
-            "university.core.cms:room-classifications-detail", kwargs={"pk": classification.pk}
+            "university.core.cms:room-classifications-detail",
+            kwargs={"pk": classification.pk},
         )
         response = staff_api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -412,7 +417,9 @@ class TestDiscountViewSet:
         "core_cms.view_discount", "core_cms.view_fee", client="staff_api_client"
     )
     def test_discount_retrieve(self, staff_api_client, discount):
-        url = reverse("university.core.cms:discounts-detail", kwargs={"pk": discount.pk})
+        url = reverse(
+            "university.core.cms:discounts-detail", kwargs={"pk": discount.pk}
+        )
         response = staff_api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert_fields = [

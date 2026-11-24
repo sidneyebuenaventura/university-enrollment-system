@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
@@ -6,8 +7,6 @@ from university.core.accounts.models import AcademicYear, School
 from university.core.accounts.selectors import current_semester_get
 from university.core.students.models import Student
 from university.framework.serializers import ChoiceField, inline_serializer_class
-from django.db.models import Sum
-from university.payment import selectors
 
 from . import models
 
@@ -537,7 +536,6 @@ class PaymentCountPerSchoolSerializer(serializers.ModelSerializer):
 
 
 class OverTheCounterStatusPerSchoolSerializer(serializers.ModelSerializer):
-
     over_the_counter_count = serializers.SerializerMethodField()
     paid_over_the_counter_count = serializers.SerializerMethodField()
 
@@ -592,7 +590,6 @@ class OverTheCounterStatusPerSchoolSerializer(serializers.ModelSerializer):
 
 
 class PaymentStatusPerSchoolSerializer(serializers.ModelSerializer):
-
     remaining_balance = serializers.SerializerMethodField()
     fully_paid = serializers.SerializerMethodField()
 
@@ -637,7 +634,6 @@ class PaymentStatusPerSchoolSerializer(serializers.ModelSerializer):
 
 
 class RevenuePerMethodPerSchoolYearSerializer(serializers.ModelSerializer):
-
     bukas_revenue = serializers.SerializerMethodField()
     dragonpay_revenue = serializers.SerializerMethodField()
     cashier_revenue = serializers.SerializerMethodField()

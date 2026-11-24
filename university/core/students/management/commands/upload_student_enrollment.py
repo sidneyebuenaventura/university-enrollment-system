@@ -55,7 +55,7 @@ class Command(BaseCommand):
         status = row.get("STATUS")
         try:
             grade = float(row.get("GRD_CD"))
-        except:
+        except (TypeError, ValueError):
             if row.get("GRD_CD") == "Y":
                 status = "YEARLY"
             grade = None
@@ -164,8 +164,7 @@ class Command(BaseCommand):
             is_preenrollment = options["is_preenrollment"]
             self.is_submitted = options["is_submitted"]
 
-            spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Student Enrollment data upload... \n")
+            sys.stdout.write("Student Enrollment data upload... \n")
 
             for row in reader:
                 # load_screen.spinner(spinner)

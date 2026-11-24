@@ -28,4 +28,4 @@ class Command(BaseCommand):
                 student_number=options["student_number"],
             )
         except ServiceException as e:
-            raise CommandError(str(e))
+            raise CommandError(str(e)) from e

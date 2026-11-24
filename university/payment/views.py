@@ -26,8 +26,8 @@ from rest_framework.views import APIView
 
 from config.settings.openapi import Tags
 from university.core.accounts.filters import SchoolFilter, SchoolFilterSet
+from university.core.accounts.models import AcademicYear
 from university.core.accounts.selectors import current_semester_get, user_schools_get
-from university.core.students.selectors import enrollment_get_latest
 from university.framework.events import event_publisher
 from university.framework.pagination import PageNumberPagination
 from university.framework.permissions import IsAdminUser, IsStudentUser, IsSuperUser
@@ -36,7 +36,6 @@ from university.framework.views import (
     ObjectPermissionRequiredMixin,
     PermissionRequiredMixin,
 )
-from university.core.accounts.models import AcademicYear
 
 from . import events, models, selectors, serializers, services
 from .clients import BukasClient

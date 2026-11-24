@@ -114,7 +114,7 @@ admin_dashboard_urls = [
         "overall-total-enrollees",
         views.OverallTotalEnrolleesListAPIView.as_view(),
         name="overall-total-enrollees",
-    )
+    ),
 ]
 
 student_urlpatterns = [

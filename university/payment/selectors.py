@@ -1,5 +1,4 @@
 from decimal import Decimal
-from pickle import TRUE
 from random import randint
 
 from django.contrib.auth import get_user_model
@@ -7,10 +6,9 @@ from django.db.models import Sum
 from django.utils import timezone
 from rest_framework import exceptions
 
-from university.core.accounts.models import School, Semester, AcademicYear
+from university.core.accounts.models import School, Semester
 from university.core.students.selectors import (
     enrollment_get_for_payment,
-    enrollment_get_latest,
 )
 
 from .models import (
@@ -33,7 +31,7 @@ def soa_get_for_payment(*, user: User, raise_exception: bool = False):
         soa = enrollment.statement_of_account
     except StatementOfAccount.DoesNotExist:
         if raise_exception:
-            raise exceptions.NotFound("No Statement of Account for payment.")
+            raise exceptions.NotFound("No Statement of Account for payment.") from None
         else:
             return None
 
@@ -41,21 +39,18 @@ def soa_get_for_payment(*, user: User, raise_exception: bool = False):
 
 
 def soa_get_latest(*, user: User, raise_exception: bool = False):
-    try:
-        soa = (
-            StatementOfAccount.objects.filter(user=user, enrollment__isnull=False)
-            .order_by(
-                "-enrollment__academic_year__year_start",
-                "-enrollment__year_level",
-                "-enrollment__semester__order",
-            )
-            .first()
+    soa = (
+        StatementOfAccount.objects.filter(user=user, enrollment__isnull=False)
+        .order_by(
+            "-enrollment__academic_year__year_start",
+            "-enrollment__year_level",
+            "-enrollment__semester__order",
         )
-    except StatementOfAccount.DoesNotExist:
-        if raise_exception:
-            raise exceptions.NotFound("No Statement of Acccount found.")
-        else:
-            return None
+        .first()
+    )
+
+    if not soa and raise_exception:
+        raise exceptions.NotFound("No Statement of Account found.")
 
     return soa
 
@@ -95,16 +90,13 @@ def soa_get_min_amount_due(*, soa: StatementOfAccount) -> Decimal:
 def soa_get_remaining_balance(*, soa: StatementOfAccount) -> Decimal:
     result = soa.transactions.aggregate(sum=Sum("amount"))
     balance = result.get("sum") or Decimal(0)
-    soa.has_remaining_balance = False
+    has_remaining_balance = balance > 0
 
-    if balance >= 0:
-        if balance > 0:
-            soa.has_remaining_balance = True
-            soa.save()
+    if soa.has_remaining_balance != has_remaining_balance:
+        soa.has_remaining_balance = has_remaining_balance
+        soa.save()
 
-        return balance
-
-    return Decimal(0)
+    return max(balance, Decimal(0))
 
 
 def soa_get_available_credits(*, soa: StatementOfAccount) -> Decimal:

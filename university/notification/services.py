@@ -4,8 +4,7 @@ from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from university.core.accounts.constants import ReservedRole
-from university.core.accounts.models import Role
+from university.core.maintenance.selectors import enrollment_schedule_students_get
 from university.framework.events import GenericEvent, GenericModelEvent
 from university.framework.utils import format_currency
 from university.notification.messages import MessageKeys
@@ -30,54 +29,33 @@ def email_handler(*, channel: EmailChannel, notification: Notification):
     email_send.delay(channel.id, notification.id)
 
 
-def handle_enrollment_reminder_sent(event: GenericEvent):
-    try:
-        schedule = event.object
-    except Exception:
+def _schedule_reminder_send(*, schedule, message_key: str):
+    users = [
+        student.user for student in enrollment_schedule_students_get(schedule=schedule)
+    ]
+
+    if not users:
         return
 
-    student_role = Role.objects.filter(name=ReservedRole.STUDENT).first()
-
-    if not student_role:
-        return
-
-    student_users = student_role.user_set.all()
-
+    start = timezone.localtime(schedule.start_datetime)
     notification = Notification.objects.create(
-        message_key="enrollment_reminders",
-        context={
-            "enrollment_start": timezone.localtime(schedule.start_datetime).strftime(
-                app_settings.FORMAT_DATETIME
-            )
-        },
+        message_key=message_key,
+        context={"enrollment_start": start.strftime(app_settings.FORMAT_DATETIME)},
     )
-    notification.recipients.add(*list(student_users))
+    notification.recipients.add(*users)
     notification_send(notification=notification)
+
+
+def handle_enrollment_reminder_sent(event: GenericEvent):
+    _schedule_reminder_send(
+        schedule=event.object, message_key=MessageKeys.ENROLLMENT_REMINDERS
+    )
 
 
 def handle_pre_enrollment_reminder_sent(event: GenericEvent):
-    try:
-        schedule = event.object
-    except Exception:
-        return
-
-    student_role = Role.objects.filter(name=ReservedRole.STUDENT).first()
-
-    if not student_role:
-        return
-
-    student_users = student_role.user_set.all()
-
-    notification = Notification.objects.create(
-        message_key="pre_enrollment_reminder",
-        context={
-            "enrollment_start": timezone.localtime(schedule.start_datetime).strftime(
-                app_settings.FORMAT_DATETIME
-            )
-        },
+    _schedule_reminder_send(
+        schedule=event.object, message_key=MessageKeys.PRE_ENROLLMENT_REMINDER
     )
-    notification.recipients.add(*list(student_users))
-    notification_send(notification=notification)
 
 
 def handle_payment_settled(event: GenericModelEvent):
@@ -159,7 +137,7 @@ def handle_enrollment_enrolled(event: GenericModelEvent):
     classes = []
 
     for enrolled_class in enrollment.enrolled_classes.all():
-        subject = enrolled_class.klass.curriculum_subject.subject
+        subject = enrolled_class.klass.subject
         instructor = enrolled_class.klass.instructor
         faculty = "-"
 

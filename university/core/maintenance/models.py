@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 from university.core.accounts.models import AcademicYear, Module, School, Semester
-from university.core.cms.models import Course, Semesters
+from university.core.cms.models import Course
 from university.core.students.models import Student
 from university.framework.models import BaseModel, TextChoiceField
 
@@ -75,7 +75,9 @@ class EnrollmentSchedule(BaseModel):
 
     @property
     def school_year(self) -> str:
-        return f"{self.school_year_from}-{self.school_year_to}"
+        if not self.academic_year:
+            return ""
+        return f"{self.academic_year.year_start}-{self.academic_year.year_end}"
 
     @property
     def status(self) -> Statuses:

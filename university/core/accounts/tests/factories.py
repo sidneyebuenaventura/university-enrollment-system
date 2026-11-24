@@ -1,7 +1,6 @@
 from datetime import date
 
 import factory
-import pytest
 from django.contrib.auth import get_user_model
 from factory.django import DjangoModelFactory
 from pytest_factoryboy import register
@@ -46,6 +45,7 @@ class StaffUserFactory(DjangoModelFactory):
 
     class Meta:
         model = get_user_model()
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def password_histories(self, create, extracted, **kwargs):
@@ -101,6 +101,7 @@ class StaffFactory(StaffUserFactory):
 class RoleFactory(DjangoModelFactory):
     class Meta:
         model = models.Role
+        skip_postgeneration_save = True
 
     @factory.post_generation
     def role_modules(self, create, extracted, **kwargs):
@@ -177,8 +178,8 @@ class ReligionFactory(DjangoModelFactory):
 class PersonnelFactory(DjangoModelFactory):
     user = factory.SubFactory(StaffUserFactory, is_staff=True)
 
-    ref_id = factory.LazyFunction(fake.pyint)
-    emp_id = factory.Sequence(lambda n: "EMP-2022-%05d" % n)
+    ref_id = factory.LazyFunction(lambda: str(fake.pyint()))
+    emp_id = factory.Sequence(lambda n: f"EMP-2022-{n:05d}")
     old_id = factory.LazyFunction(lambda: fake.pystr(5, 5).upper())
 
     first_name = factory.LazyFunction(fake.first_name)

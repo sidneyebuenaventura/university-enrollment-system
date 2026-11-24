@@ -3,7 +3,9 @@ from rest_framework.test import APIClient
 
 from university.core.accounts.tests.factories import *
 from university.core.cms.tests.factories import *
+from university.core.maintenance.tests.factories import *
 from university.core.students.tests.factories import *
+from university.payment.tests.factories import *
 
 
 @pytest.fixture

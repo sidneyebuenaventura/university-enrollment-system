@@ -1,11 +1,11 @@
 import sys
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from university.core.accounts.models import AcademicYear
 from university.core.cms.models import Semesters
-from university.framework.utils import LoadScreen
 from university.core.students.services import enrollment_status_evaluate
+from university.framework.utils import LoadScreen
 
 load_screen = LoadScreen()
 
@@ -16,7 +16,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         spinner = load_screen.spinning_cursor()
 
-        sys.stdout.write(f"Enrollment Status evaluation... ")
+        sys.stdout.write("Enrollment Status evaluation... ")
 
         counter = 0
         academic_year = AcademicYear.objects.filter(year_end=2023).first()

@@ -37,7 +37,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Tuition Fee Rate data upload... ")
+            sys.stdout.write("Tuition Fee Rate data upload... ")
 
             created_counter = 0
             updated_counter = 0
@@ -80,7 +80,7 @@ class Command(BaseCommand):
                 else:
                     updated_counter += 1
 
-            message = f"\nSUCCESSFULLY PROCESSED {created_counter+updated_counter+invalid_counter} TUITION FEE RATE DATA."
+            message = f"\nSUCCESSFULLY PROCESSED {created_counter + updated_counter + invalid_counter} TUITION FEE RATE DATA."
             load_screen.print_statement(message, None)
             load_screen.print_statement(
                 f"Created: {created_counter} records.", "created"

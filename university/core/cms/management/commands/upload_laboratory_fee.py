@@ -5,7 +5,7 @@ import sys
 from django.core.management.base import BaseCommand
 
 from university.core.accounts.models import AcademicYear
-from university.core.cms.models import Subject, LaboratoryFee
+from university.core.cms.models import LaboratoryFee, Subject
 from university.framework.utils import LoadScreen
 
 load_screen = LoadScreen()
@@ -22,7 +22,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Laboratory Fee data upload... ")
+            sys.stdout.write("Laboratory Fee data upload... ")
 
             created_counter = 0
             invalid_counter = 0

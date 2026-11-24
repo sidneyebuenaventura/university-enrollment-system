@@ -4,7 +4,7 @@ DJANGO_MANAGE = $(RUN_BASE) python manage.py
 
 all: init active_academic_years dragonpay_channels upload  students enrollments
 
-init: modules module_permissions roles superuser_role 
+init: modules module_permissions roles superuser_role
 
 migrate:
 	$(RUN_BASE) migrate
@@ -65,7 +65,7 @@ active_academic_years:
 academic_years:
 	$(DJANGO_MANAGE) initialize_academic_year 2022 2023
 	$(DJANGO_MANAGE) initialize_academic_year 2021 2022
-	
+
 
 fees:
 	$(DJANGO_MANAGE) upload_fee files/fee_data.csv
@@ -84,7 +84,7 @@ curriculums:
 subjects:
 	$(DJANGO_MANAGE) upload_subject_grouping files/subject_grouping_data.csv
 	$(DJANGO_MANAGE) upload_subject files/subject_data.csv
-	
+
 upload:
 	$(DJANGO_MANAGE) upload_religion files/religion_data.csv
 	$(DJANGO_MANAGE) upload_personnel files/personnel_data.csv
@@ -113,7 +113,7 @@ upload:
 	$(DJANGO_MANAGE) upload_discount files/discount_data.csv
 	$(DJANGO_MANAGE) upload_laboratory_fee files/laboratory_fee_data.csv 2021 2022
 	$(DJANGO_MANAGE) upload_remark_code files/remark_code_data.csv
-	
+
 students:
 	$(DJANGO_MANAGE) upload_student files/student_data.csv
 
@@ -143,4 +143,3 @@ enrollments:
 	$(DJANGO_MANAGE) upload_student_enrollment_fee files/enrollment_20231/student_enrollment_fee_data.csv > logs/upload/20231_enrollment_fee.log
 	$(DJANGO_MANAGE) upload_student_enrollment_discount files/enrollment_20231/student_enrollment_discount_data.csv > logs/upload/20231_enrollment_discount.log
 	$(DJANGO_MANAGE) upload_student_enrollment_balance files/enrollment_20231/student_enrollment_balance_data.csv > logs/upload/enrollment_balance.log
-

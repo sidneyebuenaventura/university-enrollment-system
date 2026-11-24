@@ -37,7 +37,7 @@ class PaymentTransactionView(View):
         try:
             response = services.bukas_payment_create(transaction=transaction)
         except APIException:
-            raise Http404
+            raise Http404 from None
 
         return HttpResponse(response)
 

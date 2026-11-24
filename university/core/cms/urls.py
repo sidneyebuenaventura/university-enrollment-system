@@ -49,7 +49,6 @@ urlpatterns = [
         views.ClassGradeStatePerSchoolListAPIView.as_view(),
         name="class-grade-states-per-school",
     ),
-    
 ]
 announcements_urlpatterns = [
     path(

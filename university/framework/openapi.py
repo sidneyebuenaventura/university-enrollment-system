@@ -118,7 +118,7 @@ class AutoSchema(SpectacularAutoSchema):
         view_name = type(view).__name__
 
         if hasattr(view, "InputSerializer"):
-            serializer_class = getattr(view, "InputSerializer")
+            serializer_class = view.InputSerializer
             return type(f"{view_name}InputSerializer", (serializer_class,), {})
         elif InlineSerializerMixin in view.__class__.__bases__:
             serializer = super().get_request_serializer()
@@ -131,7 +131,7 @@ class AutoSchema(SpectacularAutoSchema):
         view_name = type(view).__name__
 
         if hasattr(view, "OutputSerializer"):
-            serializer_class = getattr(view, "OutputSerializer")
+            serializer_class = view.OutputSerializer
             return type(f"{view_name}OutputSerializer", (serializer_class,), {})
         elif InlineSerializerMixin in view.__class__.__bases__:
             serializer = super().get_response_serializers()

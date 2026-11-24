@@ -4,9 +4,9 @@ import sys
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from university.core.accounts.models import AcademicYear
 
-from university.core.cms.models import Class, TuitionFeeCategory, TuitionFeeRate
+from university.core.accounts.models import AcademicYear
+from university.core.cms.models import Class, TuitionFeeCategory
 from university.framework.utils import LoadScreen
 
 load_screen = LoadScreen()
@@ -82,7 +82,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             self.spinner = load_screen.spinning_cursor()
-            sys.stdout.write(f"Class Tuition Fee Rate data upload... \n")
+            sys.stdout.write("Class Tuition Fee Rate data upload... \n")
 
             chunk = []
             chunk_size = 1000

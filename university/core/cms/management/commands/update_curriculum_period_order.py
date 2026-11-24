@@ -1,11 +1,9 @@
 import argparse
-import csv
 import sys
 
 from django.core.management.base import BaseCommand
-from django.db.models import Q
 
-from university.core.cms.models import Curriculum, CurriculumPeriod, Semesters
+from university.core.cms.models import Curriculum, Semesters
 from university.framework.utils import LoadScreen
 
 load_screen = LoadScreen()
@@ -25,7 +23,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         spinner = load_screen.spinning_cursor()
-        sys.stdout.write(f"Curriculum Period Order update... ")
+        sys.stdout.write("Curriculum Period Order update... ")
 
         for curriculum in Curriculum.objects.all():
             load_screen.spinner(spinner)
@@ -46,5 +44,5 @@ class Command(BaseCommand):
                         curr_period.save()
                         order += 1
 
-        message = f"\nSUCCESSFULLY UPDATED CURRICULUM PERIOD ORDER DATA."
+        message = "\nSUCCESSFULLY UPDATED CURRICULUM PERIOD ORDER DATA."
         load_screen.print_statement(message, None)

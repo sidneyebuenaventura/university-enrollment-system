@@ -1,5 +1,4 @@
 import uuid
-from typing import Union
 
 from django.db.models import Model
 from rest_framework import serializers
@@ -8,7 +7,7 @@ from .utils import choices_help_text
 
 
 def _create_serializer_class(
-    fields: dict, meta_model: Model, meta_fields: Union[tuple, list, str]
+    fields: dict, meta_model: Model, meta_fields: tuple | list | str
 ):
     # suffix makes the serializer unique avoiding conflict
     # when generating openapi schema
@@ -26,7 +25,7 @@ def _create_serializer_class(
 
 def inline_serializer_class(
     model: Model,
-    fields: Union[tuple, list, str],
+    fields: tuple | list | str,
     declared_fields: dict = None,
     **kwargs,
 ):
@@ -44,7 +43,7 @@ class InlineSerializerMixin:
     # Deprecated
 
     def inline_serializer_class(
-        self, fields: dict, meta_model: Model, meta_fields: Union[tuple, list, str]
+        self, fields: dict, meta_model: Model, meta_fields: tuple | list | str
     ):
         name = f"{type(self).__name__}{meta_model.__name__}InlineSerializer"
 
@@ -62,7 +61,7 @@ class InlineSerializerMixin:
         self,
         model: Model = None,
         fields: dict = None,
-        meta_fields: Union[tuple, list, str] = None,
+        meta_fields: tuple | list | str = None,
         data: dict = None,
         **kwargs,
     ):
