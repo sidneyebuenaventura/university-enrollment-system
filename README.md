@@ -4,6 +4,9 @@
 
 # University Enrollment System
 
+[![CI](https://github.com/sidneyebuenaventura/university-enrollment-system/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sidneyebuenaventura/university-enrollment-system/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/sidneyebuenaventura/university-enrollment-system/badges/coverage.json)](https://github.com/sidneyebuenaventura/university-enrollment-system/actions/workflows/ci.yml)
+
 Backend for a university's admin portal and student portal. Handles curriculum
 and class setup, enrollment, fees and payments, grades, and student requests.
 It runs as a few Django services that talk to each other through RabbitMQ.
