@@ -163,3 +163,8 @@ Settings are passed as environment variables. The image doesn't include
 Settings come from environment variables (see [.env.example](.env.example)).
 Set `UNIVERSITY_NAME` and `UNIVERSITY_STUDENT_PORTAL_URL` for your school, and
 the `NOTIFICATION_MESSAGE_*` values for the contact details shown in emails.
+
+Students pay by bank transfer or in cash at the cashier. The Dragonpay and
+Bukas integrations are still in the code but turned off. To turn them back
+on, add `DP` or `B` to `UNIVERSITY_PAYMENT_METHODS` and set the
+`PAYMENT_DRAGONPAY_*` or `PAYMENT_BUKAS_*` values.

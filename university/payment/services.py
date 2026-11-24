@@ -260,6 +260,11 @@ def cashier_transaction_void(
 
 
 def payment_create(*, user: User, data: dict):
+    if data.get("payment_method") not in settings.UNIVERSITY_PAYMENT_METHODS:
+        raise exceptions.ValidationError(
+            {"payment_method": "This payment method isn't available."}
+        )
+
     soa = soa_get_latest(user=user, raise_exception=True)
 
     methods = {
@@ -789,6 +794,10 @@ def soa_create(
 def payment_transaction_expire(
     *, transaction: OverTheCounterTransaction | CashierTransaction
 ):
+    # Only unused references expire. Anything paid or settled stays as it is.
+    if transaction.status != transaction.Statuses.PENDING:
+        return
+
     transaction.fail()
     transaction.error_message = (
         f"The generated reference #{transaction.payment_id} has already expired. "

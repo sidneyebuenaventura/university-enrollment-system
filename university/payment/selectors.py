@@ -1,6 +1,7 @@
 from decimal import Decimal
 from random import randint
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.utils import timezone
@@ -17,11 +18,17 @@ from .models import (
     DragonpayChannel,
     DragonpayTransaction,
     OverTheCounterTransaction,
+    PaymentMethods,
     PaymentTransaction,
     StatementOfAccount,
 )
 
 User = get_user_model()
+
+
+def payment_methods_get() -> list[PaymentMethods]:
+    enabled = settings.UNIVERSITY_PAYMENT_METHODS
+    return [method for method in PaymentMethods if method.value in enabled]
 
 
 def soa_get_for_payment(*, user: User, raise_exception: bool = False):
