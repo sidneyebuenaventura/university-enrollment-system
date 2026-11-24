@@ -191,6 +191,17 @@ class TestReferenceNumberPayments:
             in over_the_counter_transaction.error_message
         )
 
+    def test_paid_transaction_does_not_expire(self, cashier_transaction_factory):
+        transaction = cashier_transaction_factory(
+            amount=Decimal("500.00"), status=CashierTransaction.Statuses.PAID
+        )
+
+        services.payment_transaction_expire(transaction=transaction)
+
+        transaction.refresh_from_db()
+        assert transaction.status == CashierTransaction.Statuses.PAID
+        assert not transaction.error_message
+
 
 @pytest.mark.django_db
 class TestCashierTransaction:

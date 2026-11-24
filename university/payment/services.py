@@ -789,6 +789,10 @@ def soa_create(
 def payment_transaction_expire(
     *, transaction: OverTheCounterTransaction | CashierTransaction
 ):
+    # Only unused references expire. Anything paid or settled stays as it is.
+    if transaction.status != transaction.Statuses.PENDING:
+        return
+
     transaction.fail()
     transaction.error_message = (
         f"The generated reference #{transaction.payment_id} has already expired. "
